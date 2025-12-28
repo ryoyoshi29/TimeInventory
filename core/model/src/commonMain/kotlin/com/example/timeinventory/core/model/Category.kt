@@ -17,7 +17,7 @@ import kotlin.uuid.Uuid
 data class Category(
     val id: Uuid = Uuid.random(),
     val name: String,
-    val colorArgb: Long,
+    val colorArgb: Int,
     val sortOrder: Int = 0,
 ) {
     init {
