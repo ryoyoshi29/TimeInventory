@@ -5,33 +5,82 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.timeinventory.core.database.entity.LogEventEntity
+import com.example.timeinventory.core.database.model.LogEventWithCategory
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LogEventDao {
     @Query(
         """
-        SELECT * FROM log_event
-        WHERE date(startDateTime / 1000, 'unixepoch', 'localtime') = date(:timestamp / 1000, 'unixepoch', 'localtime')
-        ORDER BY startDateTime ASC
+        SELECT
+            log_event.*,
+            category.id as category_id,
+            category.name as category_name,
+            category.colorArgb as category_colorArgb,
+            category.sortOrder as category_sortOrder
+        FROM log_event
+        INNER JOIN category ON log_event.categoryId = category.id
+        WHERE log_event.startDateTime >= :startTimestamp AND log_event.startDateTime < :endTimestamp
+        ORDER BY log_event.startDateTime ASC
     """
     )
-    fun getByDateAsFlow(timestamp: Long): Flow<List<LogEventEntity>>
+    fun getByRangeWithCategoryAsFlow(
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): Flow<List<LogEventWithCategory>>
 
     @Query(
         """
-        SELECT * FROM log_event
-        WHERE startDateTime >= :startTimestamp AND startDateTime <= :endTimestamp
-        ORDER BY startDateTime ASC
+        SELECT
+            log_event.*,
+            category.id as category_id,
+            category.name as category_name,
+            category.colorArgb as category_colorArgb,
+            category.sortOrder as category_sortOrder
+        FROM log_event
+        INNER JOIN category ON log_event.categoryId = category.id
+        WHERE log_event.startDateTime >= :startTimestamp AND log_event.startDateTime < :endTimestamp
+        ORDER BY log_event.startDateTime ASC
     """
     )
-    fun getByPeriodAsFlow(startTimestamp: Long, endTimestamp: Long): Flow<List<LogEventEntity>>
+    fun getByPeriodWithCategoryAsFlow(
+        startTimestamp: Long,
+        endTimestamp: Long
+    ): Flow<List<LogEventWithCategory>>
+
+    @Query(
+        """
+        SELECT
+            log_event.*,
+            category.id as category_id,
+            category.name as category_name,
+            category.colorArgb as category_colorArgb,
+            category.sortOrder as category_sortOrder
+        FROM log_event
+        INNER JOIN category ON log_event.categoryId = category.id
+        WHERE log_event.id = :id
+    """
+    )
+    suspend fun getByIdWithCategory(id: String): LogEventWithCategory?
 
     @Query("SELECT * FROM log_event WHERE id = :id")
     suspend fun getById(id: String): LogEventEntity?
 
-    @Query("SELECT * FROM log_event WHERE endDateTime IS NULL LIMIT 1")
-    suspend fun getActive(): LogEventEntity?
+    @Query(
+        """
+        SELECT
+            log_event.*,
+            category.id as category_id,
+            category.name as category_name,
+            category.colorArgb as category_colorArgb,
+            category.sortOrder as category_sortOrder
+        FROM log_event
+        INNER JOIN category ON log_event.categoryId = category.id
+        WHERE log_event.endDateTime IS NULL
+        LIMIT 1
+    """
+    )
+    suspend fun getActiveWithCategory(): LogEventWithCategory?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(logEvent: LogEventEntity)

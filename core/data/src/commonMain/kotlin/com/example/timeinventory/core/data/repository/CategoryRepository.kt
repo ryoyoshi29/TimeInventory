@@ -52,7 +52,9 @@ interface CategoryRepository {
      * デフォルトカテゴリを初期化
      *
      * 初回起動時にデフォルトのカテゴリ（仕事、休憩、睡眠など）を作成する。
-     * 既にカテゴリが存在する場合は何もしない。
+     * UI層からローカライズされたカテゴリリストを受け取る。
+     *
+     * @param categories 初期化するカテゴリのリスト
      */
-    suspend fun initializeDefaultCategories()
+    suspend fun initializeDefaultCategories(categories: List<Category>)
 }

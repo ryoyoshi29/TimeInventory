@@ -2,11 +2,10 @@ package com.example.timeinventory.core.data.repository
 
 import com.example.timeinventory.core.model.Category
 import com.example.timeinventory.core.model.LogEvent
-import kotlin.time.Instant
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.LocalDate
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * LogEventのデータアクセスを提供するRepository
@@ -62,9 +61,10 @@ interface LogEventRepository {
      * 指定されたLogEventのendDateTimeを設定してデータベースを更新する。
      *
      * @param logEventId 停止するLogEventのID
-     * @throws IllegalStateException 指定されたLogEventが既に終了している場合
+     * @return 成功時はSuccess、失敗時はFailureを返す
+     *         - LogEventNotFoundException: LogEventが見つからない場合
      */
-    suspend fun stopTimer(logEventId: Uuid)
+    suspend fun stopTimer(logEventId: Uuid): Result<Unit>
 
     /**
      * LogEventを保存または更新
