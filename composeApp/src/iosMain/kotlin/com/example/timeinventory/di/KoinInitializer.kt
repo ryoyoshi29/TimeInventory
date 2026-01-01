@@ -12,6 +12,7 @@ fun initKoin() {
         modules(
             platformModule(),
             dataModule,
+            viewModelModule,
         )
     }
 }

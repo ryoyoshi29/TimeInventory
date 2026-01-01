@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bottom Navigation Labels -->
+    <string name="bottom_nav_timeline">Timeline</string>
+    <string name="bottom_nav_report">Report</string>
+</resources>
