@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -26,6 +30,11 @@ class TimelineViewModel(
 
     private val _uiState = MutableStateFlow<TimelineUiState>(TimelineUiState.Loading)
     val uiState: StateFlow<TimelineUiState> = _uiState.asStateFlow()
+
+    private val _selectedDate: MutableStateFlow<LocalDate> = MutableStateFlow(
+        Clock.System.todayIn(TimeZone.currentSystemDefault())
+    )
+    val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
     /**
      * 初期化処理
@@ -137,4 +146,12 @@ class TimelineViewModel(
             sortOrder = 6
         ),
     )
+
+    /**
+     * 日付選択
+     */
+    fun selectDate(date: LocalDate) {
+        _selectedDate.value = date
+        // TODO: 選択日付のデータを再読み込み
+    }
 }
