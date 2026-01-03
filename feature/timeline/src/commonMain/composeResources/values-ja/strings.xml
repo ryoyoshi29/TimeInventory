@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Day of Week Labels (Short) -->
+    <string name="day_of_week_sunday">日</string>
+    <string name="day_of_week_monday">月</string>
+    <string name="day_of_week_tuesday">火</string>
+    <string name="day_of_week_wednesday">水</string>
+    <string name="day_of_week_thursday">木</string>
+    <string name="day_of_week_friday">金</string>
+    <string name="day_of_week_saturday">土</string>
+</resources>

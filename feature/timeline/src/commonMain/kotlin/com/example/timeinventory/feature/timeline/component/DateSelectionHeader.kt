@@ -35,6 +35,15 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
+import org.jetbrains.compose.resources.stringResource
+import timeinventory.feature.timeline.generated.resources.Res
+import timeinventory.feature.timeline.generated.resources.day_of_week_friday
+import timeinventory.feature.timeline.generated.resources.day_of_week_monday
+import timeinventory.feature.timeline.generated.resources.day_of_week_saturday
+import timeinventory.feature.timeline.generated.resources.day_of_week_sunday
+import timeinventory.feature.timeline.generated.resources.day_of_week_thursday
+import timeinventory.feature.timeline.generated.resources.day_of_week_tuesday
+import timeinventory.feature.timeline.generated.resources.day_of_week_wednesday
 import kotlin.time.Clock
 
 /**
@@ -182,13 +191,13 @@ private fun DateItem(
 @Composable
 private fun getDayOfWeekText(dayOfWeek: DayOfWeek): String {
     return when (dayOfWeek) {
-        DayOfWeek.SUNDAY -> "S"
-        DayOfWeek.MONDAY -> "M"
-        DayOfWeek.TUESDAY -> "T"
-        DayOfWeek.WEDNESDAY -> "W"
-        DayOfWeek.THURSDAY -> "T"
-        DayOfWeek.FRIDAY -> "F"
-        DayOfWeek.SATURDAY -> "S"
+        DayOfWeek.SUNDAY -> stringResource(Res.string.day_of_week_sunday)
+        DayOfWeek.MONDAY -> stringResource(Res.string.day_of_week_monday)
+        DayOfWeek.TUESDAY -> stringResource(Res.string.day_of_week_tuesday)
+        DayOfWeek.WEDNESDAY -> stringResource(Res.string.day_of_week_wednesday)
+        DayOfWeek.THURSDAY -> stringResource(Res.string.day_of_week_thursday)
+        DayOfWeek.FRIDAY -> stringResource(Res.string.day_of_week_friday)
+        DayOfWeek.SATURDAY -> stringResource(Res.string.day_of_week_saturday)
     }
 }
 
