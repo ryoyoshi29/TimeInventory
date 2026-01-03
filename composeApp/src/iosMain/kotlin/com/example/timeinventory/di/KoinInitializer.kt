@@ -7,7 +7,7 @@ import org.koin.core.context.startKoin
  *
  * SwiftのApp構造体から呼び出される
  */
-fun initKoin() {
+fun doInitKoin() {
     startKoin {
         modules(
             platformModule(),
