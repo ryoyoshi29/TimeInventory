@@ -8,4 +8,8 @@
     <string name="day_of_week_thursday">木</string>
     <string name="day_of_week_friday">金</string>
     <string name="day_of_week_saturday">土</string>
+
+    <!-- Timeline Column Headers -->
+    <string name="timeline_column_log">ログ</string>
+    <string name="timeline_column_schedule">スケジュール</string>
 </resources>

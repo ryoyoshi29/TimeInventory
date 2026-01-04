@@ -3,20 +3,19 @@ package com.example.timeinventory.feature.timeline
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.example.timeinventory.feature.timeline.component.DateSelectionHeader
+import com.example.timeinventory.feature.timeline.component.TimelineHeader
 import kotlinx.datetime.number
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -46,21 +45,19 @@ fun TimelineScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("${selectedDate.month.number}/${selectedDate.year}")
-                }
-            )
-        }
-    ) { paddingValues ->
+    Column(modifier = Modifier.fillMaxSize()) {
+        // TopAppBar（月/年表示）
+        TopAppBar(
+            title = {
+                Text("${selectedDate.month.number}/${selectedDate.year}")
+            },
+            windowInsets = TopAppBarDefaults.windowInsets
+        )
+
         when (uiState) {
             is TimelineUiState.Loading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator()
@@ -68,13 +65,9 @@ fun TimelineScreen(
             }
 
             is TimelineUiState.Success -> {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    // 週表示の日付選択
-                    DateSelectionHeader(
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // 週表示の日付選択 + タイムラインヘッダー
+                    TimelineHeader(
                         selectedDate = selectedDate,
                         onDateSelected = { viewModel.selectDate(it) }
                     )
@@ -94,9 +87,7 @@ fun TimelineScreen(
 
             is TimelineUiState.Error -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(

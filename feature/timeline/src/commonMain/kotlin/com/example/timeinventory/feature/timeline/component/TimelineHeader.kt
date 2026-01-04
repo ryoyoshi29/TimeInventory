@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
@@ -44,10 +48,12 @@ import timeinventory.feature.timeline.generated.resources.day_of_week_sunday
 import timeinventory.feature.timeline.generated.resources.day_of_week_thursday
 import timeinventory.feature.timeline.generated.resources.day_of_week_tuesday
 import timeinventory.feature.timeline.generated.resources.day_of_week_wednesday
+import timeinventory.feature.timeline.generated.resources.timeline_column_log
+import timeinventory.feature.timeline.generated.resources.timeline_column_schedule
 import kotlin.time.Clock
 
 /**
- * 日付選択ヘッダー（週表示カレンダー形式）
+ * 日付選択ヘッダー（週表示カレンダー形式 + タイムラインヘッダー）
  *
  * @param selectedDate 選択中の日付
  * @param onDateSelected 日付選択時のコールバック
@@ -55,7 +61,31 @@ import kotlin.time.Clock
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun DateSelectionHeader(
+fun TimelineHeader(
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        WeekCalendar(
+            selectedDate = selectedDate,
+            onDateSelected = onDateSelected
+        )
+
+        TimelineColumnHeader()
+
+        Spacer(Modifier.height(16.dp))
+
+        HorizontalDivider()
+    }
+}
+
+/**
+ * 週カレンダー（スワイプ可能）
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun WeekCalendar(
     selectedDate: LocalDate,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
@@ -87,7 +117,6 @@ fun DateSelectionHeader(
         modifier = modifier
     ) { page ->
         val weekOffset = page - initialPage
-        // 基準日からのオフセットで週の開始日を計算（selectedDateに依存しない）
         val weekDates = getWeekDates(baseDate.plus(weekOffset * 7, DateTimeUnit.DAY))
 
         Row(
@@ -109,6 +138,37 @@ fun DateSelectionHeader(
 }
 
 /**
+ * タイムライン2列ヘッダー（「ログ」「スケジュール」）
+ */
+@Composable
+private fun TimelineColumnHeader(
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = stringResource(Res.string.timeline_column_log),
+            modifier = Modifier.weight(0.6f),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = stringResource(Res.string.timeline_column_schedule),
+            modifier = Modifier.weight(0.4f),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/**
  * 日付アイテム（曜日 + 日付）
  */
 @Composable
@@ -117,72 +177,98 @@ private fun DateItem(
     isSelected: Boolean,
     isToday: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val dayOfWeekText = getDayOfWeekText(date.dayOfWeek) // TODO: ローカライズ
+    val dayOfWeekText = getDayOfWeekText(date.dayOfWeek)
+    val dateColors = getDateItemColors(isSelected, isToday)
 
-    // 日付部分の背景色
-    val dateBackgroundColor by animateColorAsState(
-        targetValue = when {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // 曜日ラベル
+        Text(
+            text = dayOfWeekText,
+            style = MaterialTheme.typography.bodySmall,
+            color = dateColors.dayOfWeekColor
+        )
+
+        // 日付（円形背景あり）
+        DateCircle(
+            day = date.day,
+            isSelected = isSelected,
+            backgroundColor = dateColors.backgroundColor,
+            textColor = dateColors.textColor,
+            onClick = onClick
+        )
+    }
+}
+
+/**
+ * 日付サークル（アニメーション付き）
+ */
+@Composable
+private fun DateCircle(
+    day: Int,
+    isSelected: Boolean,
+    backgroundColor: Color,
+    textColor: Color,
+    onClick: () -> Unit,
+) {
+    val animatedBackgroundColor by animateColorAsState(backgroundColor)
+    val animatedTextColor by animateColorAsState(textColor)
+    val scale by animateFloatAsState(if (isSelected) 1f else 0.95f)
+
+    Box(
+        modifier = Modifier
+            .size(36.dp)
+            .scale(scale)
+            .clip(CircleShape)
+            .background(animatedBackgroundColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = day.toString(),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = animatedTextColor
+        )
+    }
+}
+
+/**
+ * 日付アイテムの色セット
+ */
+private data class DateItemColors(
+    val backgroundColor: Color,
+    val textColor: Color,
+    val dayOfWeekColor: Color,
+)
+
+/**
+ * 日付アイテムの色を計算
+ */
+@Composable
+private fun getDateItemColors(isSelected: Boolean, isToday: Boolean): DateItemColors {
+    return DateItemColors(
+        backgroundColor = when {
             isSelected && isToday -> MaterialTheme.colorScheme.primary
             isSelected -> MaterialTheme.colorScheme.surfaceVariant
             else -> Color.Transparent
-        }
-    )
-
-    // 日付部分の文字色
-    val dateTextColor by animateColorAsState(
-        targetValue = when {
+        },
+        textColor = when {
             isSelected && isToday -> MaterialTheme.colorScheme.onPrimary
             isSelected -> MaterialTheme.colorScheme.onSurface
             isToday -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.onSurface
+        },
+        dayOfWeekColor = if (isToday) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant
         }
     )
-
-    // 曜日部分の文字色（背景色なし）
-    val dayOfWeekColor by animateColorAsState(
-        targetValue = when {
-            isToday -> MaterialTheme.colorScheme.primary
-            else -> MaterialTheme.colorScheme.onSurfaceVariant
-        }
-    )
-
-    // 日付部分のスケールアニメーション
-    val dateScale by animateFloatAsState(
-        targetValue = if (isSelected) 1f else 0.95f
-    )
-
-    Column(
-        modifier = Modifier
-            .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        // 曜日（背景色なし）
-        Text(
-            text = dayOfWeekText,
-            style = MaterialTheme.typography.bodySmall,
-            color = dayOfWeekColor
-        )
-
-        // 日付（円形背景あり）
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .scale(dateScale)
-                .clip(CircleShape)
-                .background(dateBackgroundColor)
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = date.day.toString(),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = dateTextColor
-            )
-        }
-    }
 }
 
 /**

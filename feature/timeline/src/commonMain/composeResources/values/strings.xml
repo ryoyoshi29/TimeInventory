@@ -8,4 +8,8 @@
     <string name="day_of_week_thursday">T</string>
     <string name="day_of_week_friday">F</string>
     <string name="day_of_week_saturday">S</string>
+
+    <!-- Timeline Column Headers -->
+    <string name="timeline_column_log">Log</string>
+    <string name="timeline_column_schedule">Schedule</string>
 </resources>
