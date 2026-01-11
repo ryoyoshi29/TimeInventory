@@ -4,12 +4,16 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.timeinventory.core.data.repository.CategoryRepository
+import com.example.timeinventory.core.data.repository.LogEventRepository
+import com.example.timeinventory.core.data.repository.PlannedEventRepository
 import com.example.timeinventory.core.data.repository.PreferencesRepository
 import com.example.timeinventory.core.designsystem.theme.DefaultCategoryColors
 import com.example.timeinventory.core.model.Category
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -26,6 +30,8 @@ import kotlin.uuid.Uuid
 class TimelineViewModel(
     private val preferencesRepository: PreferencesRepository,
     private val categoryRepository: CategoryRepository,
+    private val logEventRepository: LogEventRepository,
+    private val plannedEventRepository: PlannedEventRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<TimelineUiState>(TimelineUiState.Loading)
@@ -78,11 +84,20 @@ class TimelineViewModel(
                     preferencesRepository.markInitialized()
                 }
 
-                // TODO: タイムラインデータを取得
-                _uiState.value = TimelineUiState.Success(
-                    logEvents = emptyList(), // TODO: 実装
-                    plannedEvents = emptyList() // TODO: 実装
-                )
+                // selectedDateの変化を監視して自動的にデータを再取得
+                _selectedDate.flatMapLatest { date ->
+                    combine(
+                        logEventRepository.getLogEventsByDateStream(date),
+                        plannedEventRepository.getPlannedEventsByDateStream(date)
+                    ) { logEvents, plannedEvents ->
+                        TimelineUiState.Success(
+                            logEvents = logEvents,
+                            plannedEvents = plannedEvents
+                        )
+                    }
+                }.collect { successState ->
+                    _uiState.value = successState
+                }
             } catch (e: Exception) {
                 _uiState.value = TimelineUiState.Error(e.message ?: "Unknown error")
             }
@@ -148,6 +163,5 @@ class TimelineViewModel(
      */
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date
-        // TODO: 選択日付のデータを再読み込み
     }
 }

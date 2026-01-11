@@ -8,5 +8,5 @@ import org.koin.dsl.module
  * ViewModel layer dependencies
  */
 val viewModelModule = module {
-    viewModel { TimelineViewModel(get(), get()) }
+    viewModel { TimelineViewModel(get(), get(), get(), get()) }
 }
