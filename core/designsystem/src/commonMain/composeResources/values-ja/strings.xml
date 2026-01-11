@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common Actions -->
+    <string name="action_confirm">確定</string>
+    <string name="action_cancel">キャンセル</string>
+</resources>
