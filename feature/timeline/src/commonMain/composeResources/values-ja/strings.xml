@@ -13,7 +13,7 @@
     <string name="timeline_column_log">ログ</string>
     <string name="timeline_column_schedule">スケジュール</string>
 
-    .<!-- Default Categories -->
+    <!-- Default Categories -->
     <string name="default_category_work">仕事</string>
     <string name="default_category_study">勉強</string>
     <string name="default_category_exercise">運動</string>
@@ -21,4 +21,19 @@
     <string name="default_category_sleep">睡眠</string>
     <string name="default_category_meal">食事</string>
     <string name="default_category_other">その他</string>
+
+    <!-- Event Bottom Sheet -->
+    <string name="event_sheet_title_create">新規イベント作成</string>
+    <string name="event_sheet_label_activity">アクティビティ</string>
+    <string name="event_sheet_placeholder_activity">例: 数学の勉強、決算会議など</string>
+    <string name="event_sheet_label_category">カテゴリ</string>
+    <string name="event_sheet_label_start_time">開始時間</string>
+    <string name="event_sheet_label_end_time">終了時間</string>
+    <string name="event_sheet_label_memo">メモ</string>
+    <string name="event_sheet_placeholder_memo">詳細や振り返りを入力...</string>
+    <string name="event_sheet_action_cancel">キャンセル</string>
+    <string name="event_sheet_action_create">作成</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_time_select">時刻選択</string>
 </resources>

@@ -9,14 +9,24 @@ import com.example.timeinventory.core.data.repository.PlannedEventRepository
 import com.example.timeinventory.core.data.repository.PreferencesRepository
 import com.example.timeinventory.core.designsystem.theme.DefaultCategoryColors
 import com.example.timeinventory.core.model.Category
+import com.example.timeinventory.core.model.LogEvent
+import com.example.timeinventory.core.model.PlannedEvent
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
@@ -27,20 +37,45 @@ import kotlin.uuid.Uuid
  *
  * タイムライン画面の状態管理と、アプリ初期化処理を担当
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class TimelineViewModel(
     private val preferencesRepository: PreferencesRepository,
     private val categoryRepository: CategoryRepository,
     private val logEventRepository: LogEventRepository,
     private val plannedEventRepository: PlannedEventRepository,
 ) : ViewModel() {
+    private val _selectedDate =
+        MutableStateFlow(Clock.System.todayIn(TimeZone.currentSystemDefault()))
+    private val eventStateFlow: Flow<TimelineEventState> = _selectedDate.flatMapLatest { date ->
+        combine<List<LogEvent>, List<PlannedEvent>, TimelineEventState>(
+            logEventRepository.getLogEventsByDateStream(date),
+            plannedEventRepository.getPlannedEventsByDateStream(date)
+        ) { logEvents, plannedEvents ->
+            TimelineEventState.Success(logEvents, plannedEvents)
+        }
+            .onStart {
+                emit(TimelineEventState.Loading)
+            }
+            .catch { e ->
+                emit(TimelineEventState.Error(e.message ?: "Unknown Error"))
+            }
+    }
 
-    private val _uiState = MutableStateFlow<TimelineUiState>(TimelineUiState.Loading)
-    val uiState: StateFlow<TimelineUiState> = _uiState.asStateFlow()
-
-    private val _selectedDate: MutableStateFlow<LocalDate> = MutableStateFlow(
-        Clock.System.todayIn(TimeZone.currentSystemDefault())
+    val uiState: StateFlow<TimelineUiState> = combine(
+        _selectedDate,
+        categoryRepository.getCategoriesStream(),
+        eventStateFlow
+    ) { date, categories, eventState ->
+        TimelineUiState(
+            selectedDate = date,
+            categories = categories,
+            eventState = eventState
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = TimelineUiState(selectedDate = _selectedDate.value)
     )
-    val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
     /**
      * 初期化処理
@@ -64,8 +99,7 @@ class TimelineViewModel(
     ) {
         viewModelScope.launch {
             try {
-                _uiState.value = TimelineUiState.Loading
-
+                // 初期化処理
                 val isFirstLaunch = preferencesRepository.isFirstLaunch()
 
                 if (isFirstLaunch) {
@@ -83,23 +117,8 @@ class TimelineViewModel(
 
                     preferencesRepository.markInitialized()
                 }
-
-                // selectedDateの変化を監視して自動的にデータを再取得
-                _selectedDate.flatMapLatest { date ->
-                    combine(
-                        logEventRepository.getLogEventsByDateStream(date),
-                        plannedEventRepository.getPlannedEventsByDateStream(date)
-                    ) { logEvents, plannedEvents ->
-                        TimelineUiState.Success(
-                            logEvents = logEvents,
-                            plannedEvents = plannedEvents
-                        )
-                    }
-                }.collect { successState ->
-                    _uiState.value = successState
-                }
             } catch (e: Exception) {
-                _uiState.value = TimelineUiState.Error(e.message ?: "Unknown error")
+                // TODO: エラー処理
             }
         }
     }
@@ -163,5 +182,49 @@ class TimelineViewModel(
      */
     fun selectDate(date: LocalDate) {
         _selectedDate.value = date
+    }
+
+    /**
+     * LogEventを作成
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun createLogEvent(
+        title: String,
+        startTime: LocalTime,
+        endTime: LocalTime,
+        category: Category,
+        memo: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val timeZone = TimeZone.currentSystemDefault()
+                val selectedDate = _selectedDate.value
+
+                val logEvent = LogEvent(
+                    activity = title,
+                    category = category,
+                    startDateTime = createInstant(selectedDate, startTime, timeZone),
+                    endDateTime = createInstant(selectedDate, endTime, timeZone),
+                    memo = memo
+                )
+
+                logEventRepository.upsertLogEvent(logEvent)
+            } catch (e: Exception) {
+                // TODO: エラーハンドリング
+            }
+        }
+    }
+
+    /**
+     * kotlinx.datetime.Instant を kotlin.time.Instant に変換
+     */
+    private fun createInstant(
+        date: LocalDate,
+        time: LocalTime,
+        timeZone: TimeZone
+    ): kotlin.time.Instant {
+        return kotlin.time.Instant.fromEpochMilliseconds(
+            LocalDateTime(date, time).toInstant(timeZone).toEpochMilliseconds()
+        )
     }
 }

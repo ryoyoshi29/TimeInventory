@@ -1,5 +1,7 @@
 package com.example.timeinventory.feature.timeline.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,13 +18,19 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.timeinventory.core.model.LogEvent
 import com.example.timeinventory.core.model.PlannedEvent
+import kotlinx.datetime.LocalTime
 
 // 定数定義
 /** 1時間あたりの高さ */
@@ -38,12 +46,14 @@ internal val TIME_COLUMN_WIDTH: Dp = 56.dp
  *
  * @param logEvents ログイベントリスト
  * @param plannedEvents 予定イベントリスト
+ * @param onLogColumnLongPress ログ列長押し時のコールバック（開始時刻、終了時刻）
  * @param modifier Modifier
  */
 @Composable
 fun TimelineGrid(
-    logEvents: List<LogEvent> = arrayListOf<LogEvent>(),
-    plannedEvents: List<PlannedEvent> = arrayListOf<PlannedEvent>(),
+    logEvents: List<LogEvent> = arrayListOf(),
+    plannedEvents: List<PlannedEvent> = arrayListOf(),
+    onLogColumnLongPress: (LocalTime, LocalTime) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -57,6 +67,7 @@ fun TimelineGrid(
 
         LogColumn(
             logEvents = logEvents,
+            onLongPress = onLogColumnLongPress,
             modifier = Modifier.weight(1f).padding(top = 8.dp)
         )
 
@@ -110,6 +121,7 @@ private fun TimeColumn(
 @Composable
 private fun LogColumn(
     logEvents: List<LogEvent>,
+    onLongPress: (LocalTime, LocalTime) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -117,17 +129,16 @@ private fun LogColumn(
             .fillMaxHeight()
             .height(HOUR_HEIGHT * 24)
     ) {
-        // 時間区切り線（1時間ごと）
         Column(modifier = Modifier.fillMaxSize()) {
             (0..23).forEach { hour ->
-                Box(modifier = Modifier.height(HOUR_HEIGHT)) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                    )
-                }
+                HourSlot(
+                    hour = hour,
+                    onLongPress = onLongPress
+                )
             }
         }
 
+        // LogEventブロック
         logEvents.forEach { logEvent ->
             TimeBlock(
                 startDateTime = logEvent.startDateTime,
@@ -140,6 +151,52 @@ private fun LogColumn(
                 modifier = Modifier
             )
         }
+    }
+}
+
+/**
+ * 1時間分のスロット（長押しで視覚フィードバック表示）
+ */
+@Composable
+private fun HourSlot(
+    hour: Int,
+    onLongPress: (LocalTime, LocalTime) -> Unit,
+) {
+    var isPressed by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(HOUR_HEIGHT)
+            .background(
+                if (isPressed) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                } else {
+                    androidx.compose.ui.graphics.Color.Transparent
+                }
+            )
+            .pointerInput(hour) {
+                detectTapGestures(
+                    onPress = {
+                        isPressed = true
+                        tryAwaitRelease()
+                        isPressed = false
+                    },
+                    onLongPress = {
+                        val startTime = LocalTime(hour, 0)
+                        val endTime = if (hour < 23) {
+                            LocalTime(hour + 1, 0)
+                        } else {
+                            LocalTime(23, 59)
+                        }
+                        onLongPress(startTime, endTime)
+                    }
+                )
+            }
+    ) {
+        HorizontalDivider(
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        )
     }
 }
 

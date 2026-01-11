@@ -1,21 +1,32 @@
 package com.example.timeinventory.feature.timeline
 
+import com.example.timeinventory.core.model.Category
 import com.example.timeinventory.core.model.LogEvent
 import com.example.timeinventory.core.model.PlannedEvent
+import kotlinx.datetime.LocalDate
 
 /**
- * タイムラインUI状態
+ * タイムライン画面の状態
  */
-sealed interface TimelineUiState {
-    /** ロード中 */
-    data object Loading : TimelineUiState
+data class TimelineUiState(
+    val selectedDate: LocalDate,
+    val categories: List<Category> = emptyList(),
+    val eventState: TimelineEventState = TimelineEventState.Loading
+)
 
-    /** 成功（データ表示） */
+/**
+ * イベントの状態
+ */
+sealed interface TimelineEventState {
+    /** ロード中 */
+    data object Loading : TimelineEventState
+
+    /** 読み込み完了 */
     data class Success(
         val logEvents: List<LogEvent>,
         val plannedEvents: List<PlannedEvent>,
-    ) : TimelineUiState
+    ) : TimelineEventState
 
-    /** エラー */
-    data class Error(val message: String) : TimelineUiState
+    /** エラー発生 */
+    data class Error(val message: String) : TimelineEventState
 }

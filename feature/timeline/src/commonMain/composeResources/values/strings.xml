@@ -21,4 +21,19 @@
     <string name="default_category_sleep">Sleep</string>
     <string name="default_category_meal">Meal</string>
     <string name="default_category_other">Other</string>
+
+    <!-- Event Bottom Sheet -->
+    <string name="event_sheet_title_create">Create New Event</string>
+    <string name="event_sheet_label_activity">Activity</string>
+    <string name="event_sheet_placeholder_activity">e.g. Math study, Budget meeting</string>
+    <string name="event_sheet_label_category">Category</string>
+    <string name="event_sheet_label_start_time">Start Time</string>
+    <string name="event_sheet_label_end_time">End Time</string>
+    <string name="event_sheet_label_memo">Memo</string>
+    <string name="event_sheet_placeholder_memo">Enter details or reflections...</string>
+    <string name="event_sheet_action_cancel">Cancel</string>
+    <string name="event_sheet_action_create">Create</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_time_select">Select time</string>
 </resources>
