@@ -60,11 +60,9 @@ class TimelineViewModel(
             try {
                 _uiState.value = TimelineUiState.Loading
 
-                // 初回起動チェック
                 val isFirstLaunch = preferencesRepository.isFirstLaunch()
 
                 if (isFirstLaunch) {
-                    // デフォルトカテゴリ生成
                     val defaultCategories = createDefaultCategories(
                         workLabel = workLabel,
                         studyLabel = studyLabel,
@@ -75,10 +73,8 @@ class TimelineViewModel(
                         otherLabel = otherLabel,
                     )
 
-                    // デフォルトカテゴリ登録
                     categoryRepository.initializeDefaultCategories(defaultCategories)
 
-                    // 初期化完了マーク
                     preferencesRepository.markInitialized()
                 }
 

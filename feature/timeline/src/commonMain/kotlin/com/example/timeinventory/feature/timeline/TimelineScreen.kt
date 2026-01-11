@@ -15,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.timeinventory.feature.timeline.component.TimelineGrid
 import com.example.timeinventory.feature.timeline.component.TimelineHeader
 import kotlinx.datetime.number
 import org.koin.compose.viewmodel.koinViewModel
@@ -46,7 +47,6 @@ fun TimelineScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // TopAppBar（月/年表示）
         TopAppBar(
             title = {
                 Text("${selectedDate.month.number}/${selectedDate.year}")
@@ -65,23 +65,18 @@ fun TimelineScreen(
             }
 
             is TimelineUiState.Success -> {
+                val successState = uiState as TimelineUiState.Success
+
                 Column(modifier = Modifier.fillMaxSize()) {
-                    // 週表示の日付選択 + タイムラインヘッダー
                     TimelineHeader(
                         selectedDate = selectedDate,
                         onDateSelected = { viewModel.selectDate(it) }
                     )
 
-                    // TODO: TimeLog一覧を実装
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "タイムライン画面（MVP実装予定）",
-                            style = MaterialTheme.typography.headlineMedium
-                        )
-                    }
+                    TimelineGrid(
+                        logEvents = successState.logEvents,
+                        plannedEvents = successState.plannedEvents
+                    )
                 }
             }
 

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -145,14 +146,12 @@ private fun TimelineColumnHeader(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        modifier = modifier.fillMaxWidth()
     ) {
+        Spacer(modifier = Modifier.width(TIME_COLUMN_WIDTH))
         Text(
             text = stringResource(Res.string.timeline_column_log),
-            modifier = Modifier.weight(0.6f),
+            modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -160,7 +159,7 @@ private fun TimelineColumnHeader(
 
         Text(
             text = stringResource(Res.string.timeline_column_schedule),
-            modifier = Modifier.weight(0.4f),
+            modifier = Modifier.weight(1f),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -177,7 +176,6 @@ private fun DateItem(
     isSelected: Boolean,
     isToday: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     val dayOfWeekText = getDayOfWeekText(date.dayOfWeek)
     val dateColors = getDateItemColors(isSelected, isToday)
