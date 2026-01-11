@@ -216,6 +216,37 @@ class TimelineViewModel(
     }
 
     /**
+     * PlannedEventを作成
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun createPlannedEvent(
+        title: String,
+        startTime: LocalTime,
+        endTime: LocalTime,
+        category: Category,
+        memo: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val timeZone = TimeZone.currentSystemDefault()
+                val selectedDate = _selectedDate.value
+
+                val plannedEvent = com.example.timeinventory.core.model.PlannedEvent(
+                    activity = title,
+                    category = category,
+                    startDateTime = createInstant(selectedDate, startTime, timeZone),
+                    endDateTime = createInstant(selectedDate, endTime, timeZone),
+                    memo = memo
+                )
+
+                plannedEventRepository.upsertPlannedEvent(plannedEvent)
+            } catch (e: Exception) {
+                // TODO: エラーハンドリング
+            }
+        }
+    }
+
+    /**
      * kotlinx.datetime.Instant を kotlin.time.Instant に変換
      */
     private fun createInstant(

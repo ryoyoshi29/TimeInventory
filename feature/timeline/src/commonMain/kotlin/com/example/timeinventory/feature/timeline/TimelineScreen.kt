@@ -38,6 +38,14 @@ import timeinventory.feature.timeline.generated.resources.default_category_work
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
+ * イベント作成ボトムシートの種類
+ */
+private enum class EventBottomSheetType {
+    LOG_EVENT,
+    PLANNED_EVENT
+}
+
+/**
  * タイムライン画面
  *
  * アプリのメイン画面。タイムログと予定を表示する
@@ -49,12 +57,12 @@ fun TimelineScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // ボトムシート状態
+    // イベント作成ボトムシート状態
     var showBottomSheet by remember { mutableStateOf(false) }
+    var bottomSheetType by remember { mutableStateOf<EventBottomSheetType?>(null) }
     var bottomSheetStartTime by remember { mutableStateOf(LocalTime(0, 0)) }
     var bottomSheetEndTime by remember { mutableStateOf(LocalTime(1, 0)) }
-    val bottomSheetState =
-        rememberModalBottomSheetState(true)
+    val bottomSheetState = rememberModalBottomSheetState(true)
 
     // アプリ初期化（初回起動時のみ実行）
     LaunchedEffect(Unit) {
@@ -102,6 +110,13 @@ fun TimelineScreen(
                         onLogColumnLongPress = { startTime, endTime ->
                             bottomSheetStartTime = startTime
                             bottomSheetEndTime = endTime
+                            bottomSheetType = EventBottomSheetType.LOG_EVENT
+                            showBottomSheet = true
+                        },
+                        onScheduleColumnLongPress = { startTime, endTime ->
+                            bottomSheetStartTime = startTime
+                            bottomSheetEndTime = endTime
+                            bottomSheetType = EventBottomSheetType.PLANNED_EVENT
                             showBottomSheet = true
                         }
                     )
@@ -123,7 +138,7 @@ fun TimelineScreen(
         }
     }
 
-    // ボトムシート表示
+    // イベント作成ボトムシート
     if (showBottomSheet) {
         ModalBottomSheet(
             onDismissRequest = { showBottomSheet = false },
@@ -134,7 +149,15 @@ fun TimelineScreen(
                 initialEndTime = bottomSheetEndTime,
                 categories = uiState.categories,
                 onSave = { title, startTime, endTime, category, memo ->
-                    viewModel.createLogEvent(title, startTime, endTime, category, memo)
+                    when (bottomSheetType) {
+                        EventBottomSheetType.LOG_EVENT -> {
+                            viewModel.createLogEvent(title, startTime, endTime, category, memo)
+                        }
+                        EventBottomSheetType.PLANNED_EVENT -> {
+                            viewModel.createPlannedEvent(title, startTime, endTime, category, memo)
+                        }
+                        null -> {}
+                    }
                     showBottomSheet = false
                 },
                 onDismiss = {

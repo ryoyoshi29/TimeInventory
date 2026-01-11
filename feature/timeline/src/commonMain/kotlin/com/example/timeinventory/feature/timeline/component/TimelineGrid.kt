@@ -54,6 +54,7 @@ fun TimelineGrid(
     logEvents: List<LogEvent> = arrayListOf(),
     plannedEvents: List<PlannedEvent> = arrayListOf(),
     onLogColumnLongPress: (LocalTime, LocalTime) -> Unit,
+    onScheduleColumnLongPress: (LocalTime, LocalTime) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -78,6 +79,7 @@ fun TimelineGrid(
 
         ScheduleColumn(
             plannedEvents = plannedEvents,
+            onLongPress = onScheduleColumnLongPress,
             modifier = Modifier.weight(1f).padding(top = 8.dp)
         )
     }
@@ -206,6 +208,7 @@ private fun HourSlot(
 @Composable
 private fun ScheduleColumn(
     plannedEvents: List<PlannedEvent>,
+    onLongPress: (LocalTime, LocalTime) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -213,14 +216,13 @@ private fun ScheduleColumn(
             .fillMaxHeight()
             .height(HOUR_HEIGHT * 24)
     ) {
-        // 時間区切り線（1時間ごと）
+        // 時間区切り線（1時間ごと）+ 長押し検出
         Column(modifier = Modifier.fillMaxSize()) {
             (0..23).forEach { hour ->
-                Box(modifier = Modifier.height(HOUR_HEIGHT)) {
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                    )
-                }
+                HourSlot(
+                    hour = hour,
+                    onLongPress = onLongPress
+                )
             }
         }
 
