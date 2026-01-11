@@ -12,4 +12,13 @@
     <!-- Timeline Column Headers -->
     <string name="timeline_column_log">Log</string>
     <string name="timeline_column_schedule">Schedule</string>
+
+    <!-- Default Categories -->
+    <string name="default_category_work">Work</string>
+    <string name="default_category_study">Study</string>
+    <string name="default_category_exercise">Exercise</string>
+    <string name="default_category_hobby">Hobby</string>
+    <string name="default_category_sleep">Sleep</string>
+    <string name="default_category_meal">Meal</string>
+    <string name="default_category_other">Other</string>
 </resources>

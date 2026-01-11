@@ -18,7 +18,16 @@ import androidx.compose.ui.Modifier
 import com.example.timeinventory.feature.timeline.component.TimelineGrid
 import com.example.timeinventory.feature.timeline.component.TimelineHeader
 import kotlinx.datetime.number
+import org.jetbrains.compose.resources.getString
 import org.koin.compose.viewmodel.koinViewModel
+import timeinventory.feature.timeline.generated.resources.Res
+import timeinventory.feature.timeline.generated.resources.default_category_exercise
+import timeinventory.feature.timeline.generated.resources.default_category_hobby
+import timeinventory.feature.timeline.generated.resources.default_category_meal
+import timeinventory.feature.timeline.generated.resources.default_category_other
+import timeinventory.feature.timeline.generated.resources.default_category_sleep
+import timeinventory.feature.timeline.generated.resources.default_category_study
+import timeinventory.feature.timeline.generated.resources.default_category_work
 
 /**
  * タイムライン画面
@@ -36,13 +45,13 @@ fun TimelineScreen(
     // アプリ初期化（初回起動時のみ実行）
     LaunchedEffect(Unit) {
         viewModel.initialize(
-            workLabel = "仕事", // TODO: stringResourceでローカライズ
-            studyLabel = "勉強",
-            exerciseLabel = "運動",
-            hobbyLabel = "趣味",
-            sleepLabel = "睡眠",
-            mealLabel = "食事",
-            otherLabel = "その他",
+            workLabel = getString(Res.string.default_category_work),
+            studyLabel = getString(Res.string.default_category_study),
+            exerciseLabel = getString(Res.string.default_category_exercise),
+            hobbyLabel = getString(Res.string.default_category_hobby),
+            sleepLabel = getString(Res.string.default_category_sleep),
+            mealLabel = getString(Res.string.default_category_meal),
+            otherLabel = getString(Res.string.default_category_other),
         )
     }
 

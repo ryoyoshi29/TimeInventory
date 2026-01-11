@@ -12,4 +12,13 @@
     <!-- Timeline Column Headers -->
     <string name="timeline_column_log">ログ</string>
     <string name="timeline_column_schedule">スケジュール</string>
+
+    .<!-- Default Categories -->
+    <string name="default_category_work">仕事</string>
+    <string name="default_category_study">勉強</string>
+    <string name="default_category_exercise">運動</string>
+    <string name="default_category_hobby">趣味</string>
+    <string name="default_category_sleep">睡眠</string>
+    <string name="default_category_meal">食事</string>
+    <string name="default_category_other">その他</string>
 </resources>
