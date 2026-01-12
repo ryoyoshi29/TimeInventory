@@ -39,6 +39,10 @@ Data Layer as the foundation, the key concepts are:
 Data flow is implemented using streams
 with [Kotlin Flows](https://developer.android.com/kotlin/flow).
 
+### Architecture Diagram
+
+![Architecture Diagram](screenshots/Archtecture.png)
+
 ## Data Flow Example: AI Feedback Generation on the Report Screen
 
 This example illustrates the data flow when a user requests AI-generated feedback on the Report
