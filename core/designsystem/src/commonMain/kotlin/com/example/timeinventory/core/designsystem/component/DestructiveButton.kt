@@ -2,8 +2,9 @@ package com.example.timeinventory.core.designsystem.component
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,9 +12,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 /**
- * セカンダリボタン（アウトライン）
+ * 破壊的アクション用ボタン
  *
- * アプリ内で統一されたスタイルのセカンダリボタン
+ * 削除などの危険なアクションに使用する赤色のボタン
  *
  * @param text ボタンのラベル
  * @param onClick クリック時のコールバック
@@ -21,18 +22,21 @@ import androidx.compose.ui.unit.dp
  * @param enabled ボタンの有効/無効状態
  */
 @Composable
-fun SecondaryButton(
+fun DestructiveButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    OutlinedButton(
+    Button(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
         shape = RoundedCornerShape(12.dp),
-        border = ButtonDefaults.outlinedButtonBorder(enabled = enabled),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.error,
+            contentColor = MaterialTheme.colorScheme.onError
+        ),
         contentPadding = PaddingValues(vertical = 16.dp, horizontal = 24.dp)
     ) {
         Text(

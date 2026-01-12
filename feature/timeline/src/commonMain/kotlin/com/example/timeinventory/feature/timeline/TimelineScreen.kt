@@ -20,9 +20,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.timeinventory.core.model.LogEvent
+import com.example.timeinventory.core.model.PlannedEvent
 import com.example.timeinventory.feature.timeline.component.EventBottomSheetContent
 import com.example.timeinventory.feature.timeline.component.TimelineGrid
 import com.example.timeinventory.feature.timeline.component.TimelineHeader
+import com.example.timeinventory.feature.timeline.util.toLocalTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
 import org.jetbrains.compose.resources.getString
@@ -38,14 +41,6 @@ import timeinventory.feature.timeline.generated.resources.default_category_work
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
- * イベント作成ボトムシートの種類
- */
-private enum class EventBottomSheetType {
-    LOG_EVENT,
-    PLANNED_EVENT
-}
-
-/**
  * タイムライン画面
  *
  * アプリのメイン画面。タイムログと予定を表示する
@@ -57,11 +52,8 @@ fun TimelineScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // イベント作成ボトムシート状態
-    var showBottomSheet by remember { mutableStateOf(false) }
-    var bottomSheetType by remember { mutableStateOf<EventBottomSheetType?>(null) }
-    var bottomSheetStartTime by remember { mutableStateOf(LocalTime(0, 0)) }
-    var bottomSheetEndTime by remember { mutableStateOf(LocalTime(1, 0)) }
+    // ボトムシート状態
+    var bottomSheetContent by remember { mutableStateOf<BottomSheetContent?>(null) }
     val bottomSheetState = rememberModalBottomSheetState(true)
 
     // アプリ初期化（初回起動時のみ実行）
@@ -108,16 +100,17 @@ fun TimelineScreen(
                         logEvents = successState.logEvents,
                         plannedEvents = successState.plannedEvents,
                         onLogColumnLongPress = { startTime, endTime ->
-                            bottomSheetStartTime = startTime
-                            bottomSheetEndTime = endTime
-                            bottomSheetType = EventBottomSheetType.LOG_EVENT
-                            showBottomSheet = true
+                            bottomSheetContent = BottomSheetContent.CreateLog(startTime, endTime)
                         },
                         onScheduleColumnLongPress = { startTime, endTime ->
-                            bottomSheetStartTime = startTime
-                            bottomSheetEndTime = endTime
-                            bottomSheetType = EventBottomSheetType.PLANNED_EVENT
-                            showBottomSheet = true
+                            bottomSheetContent =
+                                BottomSheetContent.CreatePlanned(startTime, endTime)
+                        },
+                        onLogEventClick = { logEvent ->
+                            bottomSheetContent = BottomSheetContent.EditLog(logEvent)
+                        },
+                        onPlannedEventClick = { plannedEvent ->
+                            bottomSheetContent = BottomSheetContent.EditPlanned(plannedEvent)
                         }
                     )
                 }
@@ -138,32 +131,128 @@ fun TimelineScreen(
         }
     }
 
-    // イベント作成ボトムシート
-    if (showBottomSheet) {
+    bottomSheetContent?.let { content ->
         ModalBottomSheet(
-            onDismissRequest = { showBottomSheet = false },
+            onDismissRequest = { bottomSheetContent = null },
             sheetState = bottomSheetState
         ) {
-            EventBottomSheetContent(
-                initialStartTime = bottomSheetStartTime,
-                initialEndTime = bottomSheetEndTime,
-                categories = uiState.categories,
-                onSave = { title, startTime, endTime, category, memo ->
-                    when (bottomSheetType) {
-                        EventBottomSheetType.LOG_EVENT -> {
+            when (content) {
+                is BottomSheetContent.CreateLog -> {
+                    EventBottomSheetContent(
+                        initialStartTime = content.startTime,
+                        initialEndTime = content.endTime,
+                        categories = uiState.categories,
+                        onSave = { title, startTime, endTime, category, memo ->
                             viewModel.createLogEvent(title, startTime, endTime, category, memo)
-                        }
-                        EventBottomSheetType.PLANNED_EVENT -> {
-                            viewModel.createPlannedEvent(title, startTime, endTime, category, memo)
-                        }
-                        null -> {}
-                    }
-                    showBottomSheet = false
-                },
-                onDismiss = {
-                    showBottomSheet = false
+                            bottomSheetContent = null
+                        },
+                        onDismiss = { bottomSheetContent = null },
+                        onDelete = null
+                    )
                 }
-            )
+
+                is BottomSheetContent.CreatePlanned -> {
+                    EventBottomSheetContent(
+                        initialStartTime = content.startTime,
+                        initialEndTime = content.endTime,
+                        categories = uiState.categories,
+                        onSave = { title, startTime, endTime, category, memo ->
+                            viewModel.createPlannedEvent(title, startTime, endTime, category, memo)
+                            bottomSheetContent = null
+                        },
+                        onDismiss = { bottomSheetContent = null },
+                        onDelete = null
+                    )
+                }
+
+                is BottomSheetContent.EditLog -> {
+                    EventBottomSheetContent(
+                        initialTitle = content.event.activity,
+                        initialCategory = content.event.category,
+                        initialStartTime = content.event.startDateTime.toLocalTime(),
+                        initialEndTime = content.event.endDateTime?.toLocalTime()
+                            ?: content.event.startDateTime.toLocalTime(),
+                        initialMemo = content.event.memo,
+                        categories = uiState.categories,
+                        editEventId = content.event.id,
+                        onSave = { title, startTime, endTime, category, memo ->
+                            viewModel.updateLogEvent(
+                                content.event.id,
+                                title,
+                                startTime,
+                                endTime,
+                                category,
+                                memo
+                            )
+                            bottomSheetContent = null
+                        },
+                        onDismiss = { bottomSheetContent = null },
+                        onDelete = { id ->
+                            viewModel.deleteLogEvent(id)
+                            bottomSheetContent = null
+                        }
+                    )
+                }
+
+                is BottomSheetContent.EditPlanned -> {
+                    EventBottomSheetContent(
+                        initialTitle = content.event.activity,
+                        initialCategory = content.event.category,
+                        initialStartTime = content.event.startDateTime.toLocalTime(),
+                        initialEndTime = content.event.endDateTime.toLocalTime(),
+                        initialMemo = content.event.memo,
+                        categories = uiState.categories,
+                        editEventId = content.event.id,
+                        onSave = { title, startTime, endTime, category, memo ->
+                            viewModel.updatePlannedEvent(
+                                content.event.id,
+                                title,
+                                startTime,
+                                endTime,
+                                category,
+                                memo
+                            )
+                            bottomSheetContent = null
+                        },
+                        onDismiss = { bottomSheetContent = null },
+                        onDelete = { id ->
+                            viewModel.deletePlannedEvent(id)
+                            bottomSheetContent = null
+                        }
+                    )
+                }
+            }
         }
     }
+}
+
+/**
+ * ボトムシートの状態
+ */
+private sealed interface BottomSheetContent {
+    /**
+     * LogEvent作成
+     */
+    data class CreateLog(
+        val startTime: LocalTime,
+        val endTime: LocalTime
+    ) : BottomSheetContent
+
+    /**
+     * PlannedEvent作成
+     */
+    data class CreatePlanned(
+        val startTime: LocalTime,
+        val endTime: LocalTime
+    ) : BottomSheetContent
+
+    /**
+     * LogEvent編集
+     */
+    data class EditLog(val event: LogEvent) : BottomSheetContent
+
+    /**
+     * PlannedEvent編集
+     */
+    data class EditPlanned(val event: PlannedEvent) : BottomSheetContent
 }

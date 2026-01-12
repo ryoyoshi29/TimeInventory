@@ -55,6 +55,8 @@ fun TimelineGrid(
     plannedEvents: List<PlannedEvent> = arrayListOf(),
     onLogColumnLongPress: (LocalTime, LocalTime) -> Unit,
     onScheduleColumnLongPress: (LocalTime, LocalTime) -> Unit = { _, _ -> },
+    onLogEventClick: (LogEvent) -> Unit = {},
+    onPlannedEventClick: (PlannedEvent) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val scrollState = rememberScrollState()
@@ -69,6 +71,7 @@ fun TimelineGrid(
         LogColumn(
             logEvents = logEvents,
             onLongPress = onLogColumnLongPress,
+            onLogEventClick = onLogEventClick,
             modifier = Modifier.weight(1f).padding(top = 8.dp)
         )
 
@@ -80,6 +83,7 @@ fun TimelineGrid(
         ScheduleColumn(
             plannedEvents = plannedEvents,
             onLongPress = onScheduleColumnLongPress,
+            onPlannedEventClick = onPlannedEventClick,
             modifier = Modifier.weight(1f).padding(top = 8.dp)
         )
     }
@@ -124,6 +128,7 @@ private fun TimeColumn(
 private fun LogColumn(
     logEvents: List<LogEvent>,
     onLongPress: (LocalTime, LocalTime) -> Unit,
+    onLogEventClick: (LogEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -149,7 +154,7 @@ private fun LogColumn(
                 colorArgb = logEvent.category.colorArgb,
                 hourHeight = HOUR_HEIGHT,
                 alpha = 0.3f,
-                onClick = {},
+                onClick = { onLogEventClick(logEvent) },
                 modifier = Modifier
             )
         }
@@ -209,6 +214,7 @@ private fun HourSlot(
 private fun ScheduleColumn(
     plannedEvents: List<PlannedEvent>,
     onLongPress: (LocalTime, LocalTime) -> Unit,
+    onPlannedEventClick: (PlannedEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -235,7 +241,7 @@ private fun ScheduleColumn(
                 colorArgb = plannedEvent.category.colorArgb,
                 hourHeight = HOUR_HEIGHT,
                 alpha = 0.3f,
-                onClick = {},
+                onClick = { onPlannedEventClick(plannedEvent) },
                 modifier = Modifier
             )
         }

@@ -11,6 +11,7 @@ import com.example.timeinventory.core.designsystem.theme.DefaultCategoryColors
 import com.example.timeinventory.core.model.Category
 import com.example.timeinventory.core.model.LogEvent
 import com.example.timeinventory.core.model.PlannedEvent
+import com.example.timeinventory.feature.timeline.util.createInstant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,10 +24,8 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toInstant
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
@@ -231,7 +230,7 @@ class TimelineViewModel(
                 val timeZone = TimeZone.currentSystemDefault()
                 val selectedDate = _selectedDate.value
 
-                val plannedEvent = com.example.timeinventory.core.model.PlannedEvent(
+                val plannedEvent = PlannedEvent(
                     activity = title,
                     category = category,
                     startDateTime = createInstant(selectedDate, startTime, timeZone),
@@ -247,15 +246,97 @@ class TimelineViewModel(
     }
 
     /**
-     * kotlinx.datetime.Instant を kotlin.time.Instant に変換
+     * LogEventを更新
      */
-    private fun createInstant(
-        date: LocalDate,
-        time: LocalTime,
-        timeZone: TimeZone
-    ): kotlin.time.Instant {
-        return kotlin.time.Instant.fromEpochMilliseconds(
-            LocalDateTime(date, time).toInstant(timeZone).toEpochMilliseconds()
-        )
+    @OptIn(ExperimentalUuidApi::class)
+    fun updateLogEvent(
+        id: Uuid,
+        title: String,
+        startTime: LocalTime,
+        endTime: LocalTime,
+        category: Category,
+        memo: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val timeZone = TimeZone.currentSystemDefault()
+                val selectedDate = _selectedDate.value
+
+                val logEvent = LogEvent(
+                    id = id,
+                    activity = title,
+                    category = category,
+                    startDateTime = createInstant(selectedDate, startTime, timeZone),
+                    endDateTime = createInstant(selectedDate, endTime, timeZone),
+                    memo = memo
+                )
+
+                logEventRepository.upsertLogEvent(logEvent)
+            } catch (e: Exception) {
+                // TODO: エラーハンドリング
+            }
+        }
     }
+
+    /**
+     * LogEventを削除
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun deleteLogEvent(id: Uuid) {
+        viewModelScope.launch {
+            try {
+                logEventRepository.deleteLogEvent(id)
+            } catch (e: Exception) {
+                // TODO: エラーハンドリング
+            }
+        }
+    }
+
+    /**
+     * PlannedEventを更新
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun updatePlannedEvent(
+        id: Uuid,
+        title: String,
+        startTime: LocalTime,
+        endTime: LocalTime,
+        category: Category,
+        memo: String,
+    ) {
+        viewModelScope.launch {
+            try {
+                val timeZone = TimeZone.currentSystemDefault()
+                val selectedDate = _selectedDate.value
+
+                val plannedEvent = PlannedEvent(
+                    id = id,
+                    activity = title,
+                    category = category,
+                    startDateTime = createInstant(selectedDate, startTime, timeZone),
+                    endDateTime = createInstant(selectedDate, endTime, timeZone),
+                    memo = memo
+                )
+
+                plannedEventRepository.upsertPlannedEvent(plannedEvent)
+            } catch (e: Exception) {
+                // TODO: エラーハンドリング
+            }
+        }
+    }
+
+    /**
+     * PlannedEventを削除
+     */
+    @OptIn(ExperimentalUuidApi::class)
+    fun deletePlannedEvent(id: Uuid) {
+        viewModelScope.launch {
+            try {
+                plannedEventRepository.deletePlannedEvent(id)
+            } catch (e: Exception) {
+                // TODO: エラーハンドリング
+            }
+        }
+    }
+
 }

@@ -29,18 +29,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.timeinventory.core.designsystem.component.DestructiveButton
 import com.example.timeinventory.core.designsystem.component.DropdownMenu
 import com.example.timeinventory.core.designsystem.component.OutlinedTextField
 import com.example.timeinventory.core.designsystem.component.PrimaryButton
-import com.example.timeinventory.core.designsystem.component.SecondaryButton
 import com.example.timeinventory.core.designsystem.component.TimePickerDialog
 import com.example.timeinventory.core.model.Category
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.stringResource
 import timeinventory.feature.timeline.generated.resources.Res
 import timeinventory.feature.timeline.generated.resources.cd_time_select
-import timeinventory.feature.timeline.generated.resources.event_sheet_action_cancel
 import timeinventory.feature.timeline.generated.resources.event_sheet_action_create
+import timeinventory.feature.timeline.generated.resources.event_sheet_action_delete
+import timeinventory.feature.timeline.generated.resources.event_sheet_action_save
 import timeinventory.feature.timeline.generated.resources.event_sheet_label_activity
 import timeinventory.feature.timeline.generated.resources.event_sheet_label_category
 import timeinventory.feature.timeline.generated.resources.event_sheet_label_end_time
@@ -49,26 +50,34 @@ import timeinventory.feature.timeline.generated.resources.event_sheet_label_star
 import timeinventory.feature.timeline.generated.resources.event_sheet_placeholder_activity
 import timeinventory.feature.timeline.generated.resources.event_sheet_placeholder_memo
 import timeinventory.feature.timeline.generated.resources.event_sheet_title_create
+import timeinventory.feature.timeline.generated.resources.event_sheet_title_edit
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
 @Composable
 fun EventBottomSheetContent(
+    initialTitle: String = "",
+    initialCategory: Category? = null,
     initialStartTime: LocalTime,
     initialEndTime: LocalTime,
+    initialMemo: String = "",
     categories: List<Category>,
+    editEventId: Uuid? = null,
     onSave: (title: String, startTime: LocalTime, endTime: LocalTime, category: Category, memo: String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onDelete: ((Uuid) -> Unit)? = null,
 ) {
-    var title by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialTitle) }
     var startTime by remember { mutableStateOf(initialStartTime) }
     var endTime by remember { mutableStateOf(initialEndTime) }
-    var memo by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(categories.firstOrNull()) }
+    var memo by remember { mutableStateOf(initialMemo) }
+    var selectedCategory by remember { mutableStateOf(initialCategory ?: categories.firstOrNull()) }
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
 
     val isSaveEnabled = title.isNotBlank() && selectedCategory != null
+    val isEditMode = editEventId != null
 
     Column(
         modifier = Modifier
@@ -76,12 +85,15 @@ fun EventBottomSheetContent(
             .padding(16.dp)
     ) {
         Text(
-            text = stringResource(Res.string.event_sheet_title_create),
+            text = stringResource(
+                if (isEditMode) Res.string.event_sheet_title_edit
+                else Res.string.event_sheet_title_create
+            ),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
+                .padding(bottom = 16.dp)
         )
 
         SectionTitle(stringResource(Res.string.event_sheet_label_activity))
@@ -141,17 +153,26 @@ fun EventBottomSheetContent(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SecondaryButton(
-                text = stringResource(Res.string.event_sheet_action_cancel),
-                onClick = onDismiss,
-                modifier = Modifier.weight(1f)
-            )
+            if (isEditMode) {
+                DestructiveButton(
+                    text = stringResource(Res.string.event_sheet_action_delete),
+                    onClick = {
+                        editEventId?.let { onDelete?.invoke(it) }
+                        onDismiss()
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
             PrimaryButton(
-                text = stringResource(Res.string.event_sheet_action_create),
+                text = stringResource(
+                    if (isEditMode) Res.string.event_sheet_action_save
+                    else Res.string.event_sheet_action_create
+                ),
                 onClick = {
                     selectedCategory?.let { category ->
                         onSave(title, startTime, endTime, category, memo)
                     }
+                    onDismiss()
                 },
                 modifier = Modifier.weight(1f),
                 enabled = isSaveEnabled
