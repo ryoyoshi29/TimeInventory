@@ -3,13 +3,11 @@ package com.example.timeinventory.feature.timeline
 import com.example.timeinventory.core.model.Category
 import com.example.timeinventory.core.model.LogEvent
 import com.example.timeinventory.core.model.PlannedEvent
-import kotlinx.datetime.LocalDate
 
 /**
  * タイムライン画面の状態
  */
 data class TimelineUiState(
-    val selectedDate: LocalDate,
     val categories: List<Category> = emptyList(),
     val eventState: TimelineEventState = TimelineEventState.Loading
 )

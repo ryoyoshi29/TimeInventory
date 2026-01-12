@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
@@ -45,6 +46,8 @@ class TimelineViewModel(
 ) : ViewModel() {
     private val _selectedDate =
         MutableStateFlow(Clock.System.todayIn(TimeZone.currentSystemDefault()))
+    val selectedDate = _selectedDate.asStateFlow()
+
     private val eventStateFlow: Flow<TimelineEventState> = _selectedDate.flatMapLatest { date ->
         combine<List<LogEvent>, List<PlannedEvent>, TimelineEventState>(
             logEventRepository.getLogEventsByDateStream(date),
@@ -66,14 +69,13 @@ class TimelineViewModel(
         eventStateFlow
     ) { date, categories, eventState ->
         TimelineUiState(
-            selectedDate = date,
             categories = categories,
             eventState = eventState
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = TimelineUiState(selectedDate = _selectedDate.value)
+        initialValue = TimelineUiState()
     )
 
     /**
@@ -338,5 +340,4 @@ class TimelineViewModel(
             }
         }
     }
-
 }

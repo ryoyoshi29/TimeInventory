@@ -22,7 +22,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -103,15 +102,6 @@ private fun WeekCalendar(
         initialPage = initialPage,
         pageCount = { Int.MAX_VALUE }
     )
-
-    // スワイプ時：ページが変更されたら、同じ曜日の日付を選択
-    LaunchedEffect(pagerState.currentPage) {
-        val weekOffset = pagerState.currentPage - initialPage
-        val currentWeekDates = getWeekDates(baseDate.plus(weekOffset * 7, DateTimeUnit.DAY))
-        currentWeekDates.find { it.dayOfWeek == selectedDate.dayOfWeek }?.let {
-            onDateSelected(it)
-        }
-    }
 
     HorizontalPager(
         state = pagerState,

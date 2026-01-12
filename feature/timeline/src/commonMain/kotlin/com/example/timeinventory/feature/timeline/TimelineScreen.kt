@@ -51,6 +51,7 @@ fun TimelineScreen(
     viewModel: TimelineViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val selectedDate by viewModel.selectedDate.collectAsState()
 
     // ボトムシート状態
     var bottomSheetContent by remember { mutableStateOf<BottomSheetContent?>(null) }
@@ -72,7 +73,7 @@ fun TimelineScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = {
-                Text("${uiState.selectedDate.month.number}/${uiState.selectedDate.year}")
+                Text("${selectedDate.month.number}/${selectedDate.year}")
             },
             windowInsets = TopAppBarDefaults.windowInsets
         )
@@ -92,7 +93,7 @@ fun TimelineScreen(
 
                 Column(modifier = Modifier.fillMaxSize()) {
                     TimelineHeader(
-                        selectedDate = uiState.selectedDate,
+                        selectedDate = selectedDate,
                         onDateSelected = { viewModel.selectDate(it) }
                     )
 
