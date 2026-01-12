@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.google.services)
 }
 
 kotlin {
@@ -55,6 +56,7 @@ kotlin {
             implementation(project(":core:data"))
             implementation(project(":core:model"))
             implementation(project(":core:database"))
+            implementation(project(":core:network"))
             implementation(project(":core:designsystem"))
             implementation(project(":feature:timeline"))
             implementation(project(":feature:report"))

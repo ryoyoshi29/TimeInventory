@@ -11,6 +11,7 @@ fun doInitKoin() {
     startKoin {
         modules(
             platformModule(),
+            networkModule,
             dataModule,
             viewModelModule,
         )

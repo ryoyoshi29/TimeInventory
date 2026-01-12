@@ -2,6 +2,7 @@ package com.example.timeinventory
 
 import android.app.Application
 import com.example.timeinventory.di.dataModule
+import com.example.timeinventory.di.networkModule
 import com.example.timeinventory.di.platformModule
 import com.example.timeinventory.di.viewModelModule
 import org.koin.android.ext.koin.androidContext
@@ -23,6 +24,7 @@ class TimeInventoryApplication : Application() {
             androidContext(this@TimeInventoryApplication)
             modules(
                 platformModule(),
+                networkModule,
                 dataModule,
                 viewModelModule,
             )

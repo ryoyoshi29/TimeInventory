@@ -1,0 +1,12 @@
+## This file must *NOT* be checked into Version Control Systems,
+# as it contains information specific to your local configuration.
+#
+# Copy this file to local.properties and fill in your values
+
+# Location of the Android SDK
+sdk.dir=/path/to/your/android/sdk
+
+# Gemini API Key
+# Get your API key from: https://aistudio.google.com/app/apikey
+# This key is used for both Android and iOS platforms
+GEMINI_API_KEY=your_api_key_here
