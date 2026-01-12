@@ -32,5 +32,5 @@ interface AiFeedbackRepository {
      * @param targetDate 対象日
      * @return 生成または取得されたAiFeedback
      */
-    suspend fun getOrGenerateFeedback(targetDate: LocalDate): AiFeedback
+    suspend fun generateFeedback(targetDate: LocalDate, prompt: String): AiFeedback
 }
