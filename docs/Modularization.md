@@ -1,20 +1,26 @@
 # Modularization
 
-This document explains the modularization strategy and the role of each module in the "TimeInventory" application.
+This document explains the modularization strategy and the role of each module in the "
+TimeInventory" application.
 
 ## Overview
 
-Modularization is the practice of breaking down a monolithic, single-module codebase into loosely coupled, self-contained modules.
+Modularization is the practice of breaking down a monolithic, single-module codebase into loosely
+coupled, self-contained modules.
 
 ### Benefits of Modularization
 
 Modularization offers many benefits, including:
 
 - **Scalability**
-    - In a tightly coupled codebase, a single change can trigger a cascade of alterations. A properly modularized project embraces the [separation of concerns](https://en.wikipedia.org/wiki/Separation_of_concerns) principle. This empowers developers with greater autonomy while enforcing architectural patterns.
+    - In a tightly coupled codebase, a single change can trigger a cascade of alterations. A
+      properly modularized project embraces
+      the [separation of concerns](https://en.wikipedia.org/wiki/Separation_of_concerns) principle.
+      This empowers developers with greater autonomy while enforcing architectural patterns.
 
 - **Ownership**
-    - A module can have a dedicated owner who is responsible for maintaining the code and tests, fixing bugs, and reviewing changes.
+    - A module can have a dedicated owner who is responsible for maintaining the code and tests,
+      fixing bugs, and reviewing changes.
 
 - **Encapsulation**
     - Isolated code is easier to read, understand, test, and maintain.
@@ -23,27 +29,45 @@ Modularization offers many benefits, including:
     - Leveraging Gradle's parallel and incremental builds can reduce build times.
 
 - **Reusability**
-    - Proper modularization enables opportunities for code sharing and building multiple apps for different platforms from the same foundation.
+    - Proper modularization enables opportunities for code sharing and building multiple apps for
+      different platforms from the same foundation.
 
 ## Modularization Strategy
 
-It's important to note that there is no single modularization strategy that fits all projects. However, there are general guidelines that can be followed to maximize benefits and minimize downsides.
+It's important to note that there is no single modularization strategy that fits all projects.
+However, there are general guidelines that can be followed to maximize benefits and minimize
+downsides.
 
-A basic module is simply a directory with a Gradle build script inside. Usually, a module consists of one or more source sets and possibly a collection of resources or assets. Modules can be built and tested independently. Due to Gradle's flexibility, there are few constraints on how you can organize your project. In general, you should strive for low coupling and high cohesion.
+A basic module is simply a directory with a Gradle build script inside. Usually, a module consists
+of one or more source sets and possibly a collection of resources or assets. Modules can be built
+and tested independently. Due to Gradle's flexibility, there are few constraints on how you can
+organize your project. In general, you should strive for low coupling and high cohesion.
 
-* **Low Coupling** - Modules should be as independent as possible from one another, so that changes to one module have zero or minimal impact on other modules. They should not possess knowledge of the inner workings of other modules.
+* **Low Coupling** - Modules should be as independent as possible from one another, so that changes
+  to one module have zero or minimal impact on other modules. They should not possess knowledge of
+  the inner workings of other modules.
 
-* **High Cohesion** - A module should comprise a collection of code that acts as a system. It should have clearly defined responsibilities and stay within the boundaries of certain domain knowledge. For example, the `core:database` module in the TimeInventory app is responsible for accessing the local database, executing queries, and managing entities.
+* **High Cohesion** - A module should comprise a collection of code that acts as a system. It should
+  have clearly defined responsibilities and stay within the boundaries of certain domain knowledge.
+  For example, the `core:database` module in the TimeInventory app is responsible for accessing the
+  local database, executing queries, and managing entities.
 
 ## Types of Modules in TimeInventory
 
 The TimeInventory app contains the following types of modules:
 
-* `app` module - Contains app-level classes and scaffolding classes that bind the rest of the codebase, such as `MainActivity`, `TimeInventoryApp`, and app-level controlled navigation. The `app` module depends on all `feature` modules and required `core` modules.
+* `composeApp` module - Contains app-level classes and scaffolding classes that bind the rest of the
+  codebase, such as `MainActivity`, `TimeInventoryApp`, and app-level controlled navigation. The
+  `composeApp` module depends on all `feature` modules and required `core` modules.
 
-* `feature:` modules - Feature-specific modules that are scoped to handle a single responsibility in the app. If a class is needed only by one `feature` module, it should remain within that module. If not, it should be extracted into an appropriate `core` module. `feature` modules should not depend on other feature modules. They only depend on the `core` modules they require.
+* `feature:` modules - Feature-specific modules that are scoped to handle a single responsibility in
+  the app. If a class is needed only by one `feature` module, it should remain within that module.
+  If not, it should be extracted into an appropriate `core` module. `feature` modules should not
+  depend on other feature modules. They only depend on the `core` modules they require.
 
-* `core:` modules - Common library modules containing auxiliary code and specific dependencies that need to be shared between other modules in the app. These modules can depend on other core modules, but they shouldn't depend on feature or app modules.
+* `core:` modules - Common library modules containing auxiliary code and specific dependencies that
+  need to be shared between other modules in the app. These modules can depend on other core
+  modules, but they shouldn't depend on feature or app modules.
 
 ## Module Structure
 
@@ -51,16 +75,16 @@ Using the above modularization strategy, the TimeInventory app has the following
 
 ## Module Details
 
-| Name | Responsibilities | Key Classes and Examples                                                                  |
-|------|-----------------|-------------------------------------------------------------------------------------------|
-| `app` | Integrates everything required for the app to function correctly. Includes UI scaffolding and navigation. | `TimeInventoryApp`<br>`MainActivity`<br>App-level navigation control                      |
-| `feature:timeline` | Provides functionality for the timeline screen. Displays the ideal day and actual day side by side, and handles timer start/stop and history editing. All UI components specific to this screen are included. | `TimelineScreen`<br>`TimelineViewModel`<br>`LogEventBlock`<br>`PlannedEventBlock`               |
-| `feature:report` | Provides functionality for the report screen. Displays graphs comparing LogEvent and PlannedEvent, visualizes goal achievement rates, and shows AI feedback. All UI components specific to this screen are included. | `ReportScreen`<br>`ReportViewModel`<br>`PieChart`<br>`BarChart`<br>`FeedbackCard`         |
-| `core:data` | Fetches app data from multiple sources and shares it across different features. Implements the Repository pattern and provides a single point of access to data. | `LogEventRepository`<br>`PlannedEventRepository`<br>`CategoryRepository`<br>`FeedbackRepository` |
-| `core:designsystem` | Provides the foundation of the design system. Includes customized Material 3 components, app theme, and icons. Does not depend on the data layer and provides only pure UI components that can be reused across all features. | `TimeInventoryTheme`<br>`PrimaryButton`<br>`Card`<br>`Icons`|
-| `core:model` | Defines model classes used throughout the app. Has no dependencies on other modules and is the most foundational module. | `LogEvent`<br>`PlannedEvent`<br>`Category`<br>`Feedback`                                        |
-| `core:database` | Provides local database storage using SQLDelight. Responsible for persisting LogEvent, PlannedEvent, and Category. | `TimeInventoryDatabase`<br>`LogEventDao`<br>`PlannedEventDao`<br>`CategoryDao`                  |
-| `core:network` | Responsible for making network requests and handling responses from remote data sources. Communicates with the Gemini API. | `GeminiApiClient`<br>`FeedbackNetworkDataSource`                                          |
+| Name                | Responsibilities                                                                                                                                                           | Key Classes and Examples                                                             |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| `composeApp`        | Integrates everything required for the app to function correctly. Includes UI scaffolding, DI setup, and app-level navigation.                                             | `App` (Composable)<br>`MainActivity`<br>`TimeInventoryApplication`<br>DI modules: `dataModule`, `networkModule`, `viewModelModule` |
+| `feature:timeline`  | Provides functionality for the timeline screen. Displays events, and handles event creation/editing via a bottom sheet.                                                    | `TimelineScreen`<br>`TimelineViewModel`<br>`EventBottomSheetContent`                 |
+| `feature:report`    | Provides functionality for the report screen. Generates and displays AI-driven feedback on the user's daily activities.                                                    | `ReportScreen`<br>`ReportViewModel`<br>`AiFeedbackContent`                           |
+| `core:data`         | Implements the Repository pattern. Fetches app data from local (database) and remote (network) sources, and provides a single point of access to data for feature modules. | `LogEventRepository`<br>`PlannedEventRepository`<br>`AiFeedbackRepository`           |
+| `core:designsystem` | Provides the foundation of the design system. Includes customized Material 3 components, theme colors, and reusable UI elements across all features.                     | `PrimaryButton`<br>`DestructiveButton`<br>`TimePickerDialog`<br>`DropdownMenu`<br>`OutlinedTextField` |
+| `core:model`        | Defines pure data model classes used throughout the app. This is the most foundational module with no dependencies on other modules.                                       | `LogEvent`<br>`PlannedEvent`<br>`Category`<br>`AiFeedback`                           |
+| `core:database`     | Provides local database storage using Room. Responsible for persisting LogEvent, PlannedEvent, Category, and AiFeedback.                                                   | `TimeInventoryDatabase`<br>`LogEventDao`<br>`PlannedEventDao`<br>`AiFeedbackDao`     |
+| `core:network`      | Responsible for making network requests and handling responses from remote data sources. Communicates with the Gemini API.                                                 | `GeminiApiClient`                                                                    |
 
 ## Module Dependency Rules
 
@@ -76,11 +100,11 @@ The module structure of TimeInventory follows these dependency rules:
     - `core:data` is unaware of `feature:timeline` or `feature:report`
     - This maintains the reusability of core modules
 
-3. **App module depends on all feature modules**
-    - Responsible for navigation and app-level integration
-    - Does not directly depend on core modules (indirectly depends through features)
+3. **`composeApp` module depends on all `feature` modules**
+    - Responsible for navigation and app-level integration.
 
 ### Data Flow Direction
+
 ```
 UI Layer (feature) 
     ↓ (data request)
@@ -93,21 +117,27 @@ Models (core:model)
 
 ## Modularization Approach in TimeInventory
 
-The modularization approach for this app was defined taking into account the TimeInventory project roadmap, upcoming work, and new features. Additionally, we aimed to find the right balance between over-modularizing a relatively small app and showcasing a modularization pattern suitable for much larger codebases closer to real-world production environments.
+The modularization approach for this app was defined taking into account the TimeInventory project
+roadmap, upcoming work, and new features. Additionally, we aimed to find the right balance between
+over-modularizing a relatively small app and showcasing a modularization pattern suitable for much
+larger codebases closer to real-world production environments.
 
 ### Module Division Criteria
 
 TimeInventory divides modules based on the following criteria:
 
 **Feature Division**
+
 - Divided by screens that users can recognize
 - `timeline` (timeline screen) and `report` (report screen) have clearly distinct responsibilities
 
 **Data Layer Granularity**
+
 - Currently, `core:data` as a single module is sufficient
 - If Repositories and data sources increase in the future, further division will be considered
 
 **UI Component Sharing**
+
 - `core:design` provides common UI components used by multiple feature modules
 - Feature-specific UI components are placed within each feature module
 
@@ -116,7 +146,6 @@ TimeInventory divides modules based on the following criteria:
 This module structure anticipates the following future extensions:
 
 - **Adding new feature modules**: For example, `feature:settings` (settings screen)
-- **Adding core:datastore**: When user preference persistence becomes necessary
 - **Adding core:common**: When common utility classes or extension functions increase
 
 ## References
