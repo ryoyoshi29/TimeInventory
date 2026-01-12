@@ -1,41 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Day of Week Labels (Short) -->
-    <string name="day_of_week_sunday">日</string>
-    <string name="day_of_week_monday">月</string>
-    <string name="day_of_week_tuesday">火</string>
-    <string name="day_of_week_wednesday">水</string>
-    <string name="day_of_week_thursday">木</string>
-    <string name="day_of_week_friday">金</string>
-    <string name="day_of_week_saturday">土</string>
+    <string name="report_title">AIフィードバック</string>
+    <string name="ai_analyze_title">AIがあなたの1日を分析します</string>
+    <string name="ai_analyze_description">予定と実績を比較し、\nKPT形式でフィードバックを提供します</string>
+    <string name="generate_feedback_button">フィードバックを生成</string>
+    <string name="generating_feedback_loading">AIがフィードバックを生成中...</string>
+    <string name="error_occurred">エラーが発生しました</string>
+    <string name="retry_button">再試行</string>
+    <string name="report_kpt_header">分析レポート (KPT)</string>
+    <string name="ai_assistant_label">AIアシスタント</string>
+    <string name="ai_feedback_prompt">
+あなたは時間管理のコーチです。ユーザーの1日の予定（PlannedEvent）と実際の活動記録（LogEvent）を比較し、KPT（Keep・Problem・Try）フレームワークに基づいたフィードバックを生成してください。
 
-    <!-- Timeline Column Headers -->
-    <string name="timeline_column_log">ログ</string>
-    <string name="timeline_column_schedule">スケジュール</string>
+【対象日】
+%1$s
 
-    <!-- Default Categories -->
-    <string name="default_category_work">仕事</string>
-    <string name="default_category_study">勉強</string>
-    <string name="default_category_exercise">運動</string>
-    <string name="default_category_hobby">趣味</string>
-    <string name="default_category_sleep">睡眠</string>
-    <string name="default_category_meal">食事</string>
-    <string name="default_category_other">その他</string>
+【予定（PlannedEvent）】
+%2$s
 
-    <!-- Event Bottom Sheet -->
-    <string name="event_sheet_title_create">新規イベント作成</string>
-    <string name="event_sheet_title_edit">イベント編集</string>
-    <string name="event_sheet_label_activity">アクティビティ</string>
-    <string name="event_sheet_placeholder_activity">例: 数学の勉強、決算会議など</string>
-    <string name="event_sheet_label_category">カテゴリ</string>
-    <string name="event_sheet_label_start_time">開始時間</string>
-    <string name="event_sheet_label_end_time">終了時間</string>
-    <string name="event_sheet_label_memo">メモ</string>
-    <string name="event_sheet_placeholder_memo">詳細や振り返りを入力...</string>
-    <string name="event_sheet_action_create">作成</string>
-    <string name="event_sheet_action_save">保存</string>
-    <string name="event_sheet_action_delete">削除</string>
+【実績（LogEvent）】
+%3$s
 
-    <!-- Content Descriptions -->
-    <string name="cd_time_select">時刻選択</string>
+【注意事項】
+- 予定と実績の差分に注目してください。
+- ポジティブかつ建設的なトーンで書いてください。
+- 具体的で実行可能なアドバイスを提供してください。
+- 出力はJSON形式のみで、他のテキストは含めないでください。
+
+【出力形式】
+{
+  "summary": "1日の総括（1-2文）",
+  "keep": {
+    "title": "Keep（続けること）",
+    "description": "良かった点を具体的に記述"
+  },
+  "problem": {
+    "title": "Problem（課題）",
+    "description": "改善すべき点を具体的に記述"
+  },
+  "tryAction": {
+    "title": "Try（次に試すこと）",
+    "description": "具体的なアクションプランを記述"
+  }
+}
+  </string>
 </resources>

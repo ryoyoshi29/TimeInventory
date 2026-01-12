@@ -1,41 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Day of Week Labels (Short) -->
-    <string name="day_of_week_sunday">S</string>
-    <string name="day_of_week_monday">M</string>
-    <string name="day_of_week_tuesday">T</string>
-    <string name="day_of_week_wednesday">W</string>
-    <string name="day_of_week_thursday">T</string>
-    <string name="day_of_week_friday">F</string>
-    <string name="day_of_week_saturday">S</string>
+    <string name="report_title">AI Feedback</string>
+    <string name="ai_analyze_title">AI will analyze your day</string>
+    <string name="ai_analyze_description">Compare plans with actual results\nand get feedback in KPT format.</string>
+    <string name="generate_feedback_button">Generate Feedback</string>
+    <string name="generating_feedback_loading">AI is generating feedback...</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="retry_button">Retry</string>
+    <string name="report_kpt_header">KPT Analysis Report</string>
+    <string name="ai_assistant_label">AI Assistant</string>
+    <string name="ai_feedback_prompt">
+You are a time management coach. Please compare the user\'s daily schedule (PlannedEvent) with their actual activity records (LogEvent) and provide feedback based on the KPT (Keep, Problem, Try) framework.
 
-    <!-- Timeline Column Headers -->
-    <string name="timeline_column_log">Log</string>
-    <string name="timeline_column_schedule">Schedule</string>
+[Target Date]
+%1$s
 
-    <!-- Default Categories -->
-    <string name="default_category_work">Work</string>
-    <string name="default_category_study">Study</string>
-    <string name="default_category_exercise">Exercise</string>
-    <string name="default_category_hobby">Hobby</string>
-    <string name="default_category_sleep">Sleep</string>
-    <string name="default_category_meal">Meal</string>
-    <string name="default_category_other">Other</string>
+[Planned Events]
+%2$s
 
-    <!-- Event Bottom Sheet -->
-    <string name="event_sheet_title_create">Create New Event</string>
-    <string name="event_sheet_title_edit">Edit Event</string>
-    <string name="event_sheet_label_activity">Activity</string>
-    <string name="event_sheet_placeholder_activity">e.g. Math study, Budget meeting</string>
-    <string name="event_sheet_label_category">Category</string>
-    <string name="event_sheet_label_start_time">Start Time</string>
-    <string name="event_sheet_label_end_time">End Time</string>
-    <string name="event_sheet_label_memo">Memo</string>
-    <string name="event_sheet_placeholder_memo">Enter details or reflections...</string>
-    <string name="event_sheet_action_create">Create</string>
-    <string name="event_sheet_action_save">Save</string>
-    <string name="event_sheet_action_delete">Delete</string>
+[Actual Log Events]
+%3$s
 
-    <!-- Content Descriptions -->
-    <string name="cd_time_select">Select time</string>
+[Instructions]
+- Focus on the differences between the planned events and the actual logs.
+- Use a positive and constructive tone.
+- Provide specific and actionable advice.
+- The output must be in JSON format ONLY. Do not include any other text.
+
+[Output Format]
+{
+  "summary": "Brief summary of the day (1-2 sentences)",
+  "keep": {
+    "title": "Keep (What went well)",
+    "description": "Describe specifically what the user should continue doing."
+  },
+  "problem": {
+    "title": "Problem (Challenges)",
+    "description": "Describe specifically what needs improvement."
+  },
+  "tryAction": {
+    "title": "Try (Action Plan)",
+    "description": "Describe a specific action plan for the next step."
+  }
+}
+  </string>
 </resources>
