@@ -157,36 +157,40 @@ Follow these steps to experience the core features:
 ### 1. **Create Planned Events (Your Ideal Day)**
 
 - Navigate to the **Timeline** screen
-- Tap the **"+"** button
-- Select **"Planned Event"** tab
-- Add events like:
-    - 09:00 - 10:00: Team Meeting (Category: Work)
-    - 10:00 - 12:00: Focus Time (Category: Work)
-    - 12:00 - 13:00: Lunch Break (Category: Personal)
+- **Long press** on the **Schedule column** (right side) at the desired time slot
+- Enter event details:
+    - Title: "Team Meeting"
+    - Time: 09:00 - 10:00
+    - Category: Work
+    - Memo (optional)
+- Repeat for other planned events
 
 ### 2. **Log Your Actual Day**
 
-- Use the **Timer** button to track real-time activities
-- Or manually add **"Log Events"** via the bottom sheet
-- Enter actual time spent:
-    - 09:00 - 10:30: Team Meeting (ran 30min over!)
-    - 10:30 - 11:00: Email triage (unexpected)
-    - 11:00 - 12:00: Focus Time (only got 1 hour)
+- **Long press** on the **Log column** (left side) at the time you want to record
+- Enter actual event details:
+    - Title: "Team Meeting"
+    - Time: 09:00 - 10:30 (ran 30min over!)
+    - Category: Work
+    - Memo (optional)
+- Add unexpected events:
+    - Title: "Email triage"
+    - Time: 10:30 - 11:00
 
 ### 3. **Generate AI Feedback**
 
-- Navigate to the **Report** screen
+- Navigate to the **Report** tab (bottom navigation)
 - Tap **"Generate AI Feedback"** button
-- Watch as Gemini analyzes your day and generates:
-    - **Keep**: "Successfully completed team meeting"
-    - **Problem**: "Meeting overrun reduced focus time by 1 hour"
-    - **Try**: "Set stricter meeting time limits tomorrow"
+- Watch as Gemini analyzes your day and generates KPT feedback:
+    - **Keep**: What worked well (e.g., "Successfully completed team meeting")
+    - **Problem**: Areas needing improvement (e.g., "Meeting overrun reduced focus time by 1 hour")
+    - **Try**: Actionable next steps (e.g., "Set stricter meeting time limits tomorrow")
 
-### 4. **View Analytics**
+### 4. **Review Your Day**
 
-- Scroll down to see category-wise time distribution
-- Compare planned vs actual time in visual charts
-- Identify patterns and improve planning
+- Use the **week calendar** at the top of Timeline screen to switch between dates
+- Compare planned events (right column) vs actual logs (left column) side-by-side
+- Identify time gaps and overruns visually
 
 ---
 
