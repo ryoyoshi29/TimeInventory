@@ -2,7 +2,10 @@ package com.example.timeinventory.feature.timeline
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -20,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.example.timeinventory.core.model.LogEvent
 import com.example.timeinventory.core.model.PlannedEvent
 import com.example.timeinventory.feature.timeline.component.EventBottomSheetContent
@@ -27,8 +32,12 @@ import com.example.timeinventory.feature.timeline.component.TimelineGrid
 import com.example.timeinventory.feature.timeline.component.TimelineHeader
 import com.example.timeinventory.feature.timeline.util.toLocalTime
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
+import kotlinx.datetime.todayIn
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import timeinventory.feature.timeline.generated.resources.Res
 import timeinventory.feature.timeline.generated.resources.default_category_exercise
@@ -38,6 +47,19 @@ import timeinventory.feature.timeline.generated.resources.default_category_other
 import timeinventory.feature.timeline.generated.resources.default_category_sleep
 import timeinventory.feature.timeline.generated.resources.default_category_study
 import timeinventory.feature.timeline.generated.resources.default_category_work
+import timeinventory.feature.timeline.generated.resources.month_april
+import timeinventory.feature.timeline.generated.resources.month_august
+import timeinventory.feature.timeline.generated.resources.month_december
+import timeinventory.feature.timeline.generated.resources.month_february
+import timeinventory.feature.timeline.generated.resources.month_january
+import timeinventory.feature.timeline.generated.resources.month_july
+import timeinventory.feature.timeline.generated.resources.month_june
+import timeinventory.feature.timeline.generated.resources.month_march
+import timeinventory.feature.timeline.generated.resources.month_may
+import timeinventory.feature.timeline.generated.resources.month_november
+import timeinventory.feature.timeline.generated.resources.month_october
+import timeinventory.feature.timeline.generated.resources.month_september
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
@@ -73,7 +95,24 @@ fun TimelineScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = {
-                Text("${selectedDate.month.number}/${selectedDate.year}")
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                )
+                {
+                    Text(
+                        text = stringResource(getMonthStringResource(selectedDate.month.number)),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (selectedDate.year != Clock.System.todayIn(TimeZone.currentSystemDefault()).year) {
+                        Spacer(modifier = Modifier.padding(4.dp))
+                        Text(
+                            text = "${selectedDate.year}",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
             },
             windowInsets = TopAppBarDefaults.windowInsets
         )
@@ -256,4 +295,22 @@ private sealed interface BottomSheetContent {
      * PlannedEvent編集
      */
     data class EditPlanned(val event: PlannedEvent) : BottomSheetContent
+}
+
+private fun getMonthStringResource(monthNumber: Int): StringResource {
+    return when (monthNumber) {
+        1 -> Res.string.month_january
+        2 -> Res.string.month_february
+        3 -> Res.string.month_march
+        4 -> Res.string.month_april
+        5 -> Res.string.month_may
+        6 -> Res.string.month_june
+        7 -> Res.string.month_july
+        8 -> Res.string.month_august
+        9 -> Res.string.month_september
+        10 -> Res.string.month_october
+        11 -> Res.string.month_november
+        12 -> Res.string.month_december
+        else -> Res.string.month_january
+    }
 }
