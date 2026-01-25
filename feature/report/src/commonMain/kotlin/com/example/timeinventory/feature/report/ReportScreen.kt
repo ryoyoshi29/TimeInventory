@@ -67,7 +67,7 @@ fun ReportScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
             when (val feedbackState = uiState.aiFeedbackState) {
                 is AiFeedbackState.Initial -> {

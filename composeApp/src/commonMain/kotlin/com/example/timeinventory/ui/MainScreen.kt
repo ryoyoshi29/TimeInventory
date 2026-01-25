@@ -1,14 +1,16 @@
 package com.example.timeinventory.ui
 
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.ViewTimeline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,25 +41,27 @@ import timeinventory.composeapp.generated.resources.bottom_nav_timeline
 fun MainScreen(
     navController: NavHostController = rememberNavController(),
 ) {
-    Scaffold(
-        bottomBar = {
-            BottomNavigationBar(navController = navController)
-        },
-        contentWindowInsets = WindowInsets(0, 0, 0, 0)
-    ) { paddingValues ->
-        NavHost(
-            navController = navController,
-            startDestination = Screen.Timeline,
-            modifier = Modifier.padding(paddingValues)
-        ) {
-            composable<Screen.Timeline> {
-                TimelineScreen()
-            }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        Box(modifier = Modifier.weight(1f)) {
+            NavHost(
+                navController = navController,
+                startDestination = Screen.Timeline
+            ) {
+                composable<Screen.Timeline> {
+                    TimelineScreen()
+                }
 
-            composable<Screen.Report> {
-                ReportScreen()
+                composable<Screen.Report> {
+                    ReportScreen()
+                }
             }
         }
+
+        BottomNavigationBar(navController = navController)
     }
 }
 
