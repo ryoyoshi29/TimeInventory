@@ -1,201 +1,108 @@
 # TimeInventory
 
-**Close the gap between your Ideal Day and Actual Day with AI-powered insights**
-
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.0-blue.svg?style=flat&logo=kotlin)](https://kotlinlang.org)
-[![Compose Multiplatform](https://img.shields.io/badge/Compose%20Multiplatform-1.9.3-4285F4?logo=jetpackcompose)](https://www.jetbrains.com/lp/compose-multiplatform/)
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS-green.svg)](https://kotlinlang.org/docs/multiplatform.html)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+**AIのインサイトを活用して、「理想の1日」と「現実の1日」のギャップを埋める**
 
 ---
 
-## About the Project
+## プロジェクトについて
 
-### Motivation
+### 主な機能
 
-How much of your day goes according to plan?
+**1. タイムラインの可視化とリアルタイム計測**
 
-Most productivity apps focus on planning or tracking, but not comparing. TimeInventory bridges this
-gap by visualizing the difference between your Planned Events (Ideal Day) and Log Events (Actual
-Day), helping you understand where your time really goes.
+* **比較表示**: 予定イベント（理想）と実績ログ（現実）を左右に並べて比較。
+* **タイマー計測**: FAB（フローティングアクションボタン）から即座に実績記録を開始。スナックバーでバックグラウンド計測中も状態を確認可能。
+* **カテゴリ管理**: 色分けされたカテゴリにより、何に時間を使っているか一目で把握。
 
-For busy professionals, project managers, and students struggling with time management,
-TimeInventory provides:
+**2. 外部カレンダー連携**
 
-- **Visual comparison** of planned vs. actual time usage
-- **AI-powered feedback** using Google's Gemini API to generate actionable KPT (Keep-Problem-Try)
-  insights
+* **双方向同期**: GoogleカレンダーやAppleカレンダーから予定（PlannedEvent）を自動インポート。
 
-### Key Features
+**3. 統計レポートと分析**
 
-**Timeline Visualization**
+* **カテゴリ別時間割合**: 円グラフで1日の時間配分を可視化。
+* **カテゴリ別達成率**: 予定に対してどれだけ実績が伴ったかを棒グラフで表示。
 
-- Side-by-side comparison of planned events and actual logs
-- Color-coded categories for quick recognition
-- Timeline view showing time blocks and gaps
+**4. AIパワーによるフィードバック**
 
-**AI-Powered Feedback**
+* **KPT分析**: Vertex AIがその日のパフォーマンスを分析し、構造化されたフィードバックを生成。
+* **Keep**: 継続すべき良い習慣
+* **Problem**: 改善が必要な課題
+* **Try**: 明日に向けた具体的なアクション
 
-- Analyzes your day's performance
-- Generates structured KPT feedback:
-    - **Keep**: What worked well
-    - **Problem**: Areas needing improvement
-    - **Try**: Actionable next steps
+**5. ユーザー基盤とサービス提供**
 
-### Demo
-https://github.com/user-attachments/assets/1b5baf52-c40c-411a-adbc-797424b6f742
+* **オンボーディング**: アプリの価値を伝える導入フロー。
+* **ログイン機能**: 複数デバイス間でのデータ同期。
+* **サブスクリプション**: 高度な分析機能やプレミアム機能の提供。
 
 ---
 
-## Tech Stack
+## 技術スタック
 
-### Core Technologies
+### コアテクノロジー
 
-- **Kotlin Multiplatform (KMP)**
-- **Compose Multiplatform**
-- **Material 3 Design System**
+* **Kotlin Multiplatform (KMP)**
+* **Compose Multiplatform**
+* **Material 3 デザインシステム**
 
-### Libraries & Frameworks
+### ライブラリ & フレームワーク
 
-| Category          | Technology                                                               | Purpose                                                           |
-|-------------------|--------------------------------------------------------------------------|-------------------------------------------------------------------|
-| **Network**       | [Ktor Client](https://ktor.io/)                                          | HTTP communication with platform-specific engines (OkHttp/Darwin) |
-| **Serialization** | [kotlinx.serialization](https://github.com/Kotlin/kotlinx.serialization) | Type-safe JSON parsing                                            |
-| **Database**      | [Room](https://developer.android.com/jetpack/androidx/releases/room)     | Local persistence (Single Source of Truth)                        |
-| **Async**         | Kotlin Coroutines & Flow                                                 | Reactive data streams with unidirectional data flow               |
-| **DI**            | [Koin](https://insert-koin.io/)                                          | Dependency injection for KMP                                      |
-| **Config**        | [BuildKonfig](https://github.com/yshrsmz/BuildKonfig)                    | Secure API key management                                         |
-| **DateTime**      | [kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime)           | Multiplatform date/time handling                                  |
-
-### AI Integration
-
-**Gemini 2.5 Flash Lite** via REST API
-
-- Unified implementation in `commonMain` using Ktor HTTP Client
-- Platform-specific engines:
-    - Android: OkHttp
-    - iOS: Darwin (native URLSession)
-- Structured JSON output using Gemini's Response Schema feature
-- Custom error handling with sealed exception hierarchy
+| カテゴリ              | テクノロジー                                                               | 目的                            |
+|-------------------|----------------------------------------------------------------------|-------------------------------|
+| **AI / Backend**  | **Vertex AI for Firebase**                                           | 生成AI（Gemini）の安全な呼び出しとクライアント統合 |
+| **Auth / Sync**   | **Firebase Authentication**                                          | ログイン機能とユーザー管理                 |
+| **Network**       | [Ktor Client](https://ktor.io/)                                      | API通信（カレンダー連携、その他外部サービス）      |
+| **Database**      | [Room](https://developer.android.com/jetpack/androidx/releases/room) | ローカル永続化（SSOT）                 |
+| **Visualization** | Compose Charts (or Custom Canvas)                                    | 円グラフ・棒グラフの描画                  |
+| **Async**         | Kotlin Coroutines & Flow                                             | UDF（単方向データフロー）に基づくリアクティブ制御    |
+| **DI**            | [Koin](https://insert-koin.io/)                                      | マルチプラットフォームでの依存性注入            |
+| **Date/Time**     | [kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime)       | タイムゾーンを考慮したマルチプラットフォーム日時操作    |
 
 ---
 
-## Architecture
+## AI統合
 
-TimeInventory follows **clean architecture** principles with a **reactive, unidirectional data
-flow (UDF)** model based
-on [official Android architecture guidance](https://developer.android.com/topic/architecture).
+**Gemini 2.5 Flash Lite (via Vertex AI for Firebase SDK)**
 
-**Detailed documentation:** [Architecture.md](docs/Architecture.md)
+これまでのREST API経由の直接呼び出しから、Firebaseを通じたセキュアな実装へ移行しました。
 
----
+* **Vertex AI for Firebase SDK**:
+* クライアントサイドから直接Geminiモデルを呼び出し。
+* APIキーをアプリに埋め込まず、Firebase App Checkによる安全な保護を推奨。
 
-## Modularization
 
-TimeInventory uses a **multi-module architecture** to improve build times, enforce separation of
-concerns.
-
-**Detailed documentation:** [Modularization.md](docs/Modularization.md)
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- **Android Studio** Ladybug (2024.2.1) or later
-- **Xcode** 15.3 or later (for iOS development)
-- **JDK** 21 or later
-- **Gemini API Key** ([Get yours here](https://aistudio.google.com/app/apikey))
-
-### Initial Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/TimeInventory.git
-   cd TimeInventory
-   ```
-
-2. **Configure API Key**
-
-   Copy the template file and add your Gemini API key:
-   ```bash
-   cp local.properties.template local.properties
-   ```
-
-   Edit `local.properties`:
-   ```properties
-   sdk.dir=/path/to/your/android/sdk
-   GEMINI_API_KEY=your_api_key_here
-   ```
-
-3. **Run the app**
-
-   #### Android
-   ```bash
-   ./gradlew :composeApp:assembleDebug
-   ./gradlew :composeApp:installDebug
-   ```
-   Or use the **Run** configuration in Android Studio.
-
-   #### iOS
-    - Open `iosApp/iosApp.xcodeproj` in Xcode
-    - Select your target device/simulator
-    - Press **Run** (⌘R)
-
-   Or from terminal:
-   ```bash
-   ./gradlew :composeApp:iosSimulatorArm64Run
-   ```
+* **実装方式**:
+* `commonMain` でSDKを抽象化。
+* Geminiの「Response Schema」機能を利用した構造化JSON出力。
+* Sealedクラスを用いたエラーハンドリングにより、ネットワークエラーやクォータ制限をUIで適切に処理。
 
 ---
 
-## Feature Walkthrough
+## アーキテクチャ
 
-Follow these steps to experience the core features:
+TimeInventoryは、[Android公式アーキテクチャガイド](https://developer.android.com/topic/architecture)
+に基づいた、**クリーンアーキテクチャ**原則と**リアクティブな単方向データフロー（UDF）**モデルを採用しています。
 
-### 1. **Create Planned Events (Your Ideal Day)**
-
-- Navigate to the **Timeline** screen
-- **Long press** on the **Schedule column** (right side) at the desired time slot
-- Enter event details:
-    - Title: "Team Meeting"
-    - Time: 09:00 - 10:00
-    - Category: Work
-    - Memo (optional)
-- Repeat for other planned events
-
-### 2. **Log Your Actual Day**
-
-- **Long press** on the **Log column** (left side) at the time you want to record
-- Enter actual event details:
-    - Title: "Team Meeting"
-    - Time: 09:00 - 10:30 (ran 30min over!)
-    - Category: Work
-    - Memo (optional)
-- Add unexpected events:
-    - Title: "Email triage"
-    - Time: 10:30 - 11:00
-
-### 3. **Generate AI Feedback**
-
-- Navigate to the **Report** tab (bottom navigation)
-- Tap **"Generate AI Feedback"** button
-- Watch as Gemini analyzes your day and generates KPT feedback:
-    - **Keep**: What worked well (e.g., "Successfully completed team meeting")
-    - **Problem**: Areas needing improvement (e.g., "Meeting overrun reduced focus time by 1 hour")
-    - **Try**: Actionable next steps (e.g., "Set stricter meeting time limits tomorrow")
-
-### 4. **Review Your Day**
-
-- Use the **week calendar** at the top of Timeline screen to switch between dates
-- Compare planned events (right column) vs actual logs (left column) side-by-side
-- Identify time gaps and overruns visually
+**詳細ドキュメント:** [Architecture.md](https://www.google.com/search?q=docs/Architecture.md) (英語)
 
 ---
 
-## Acknowledgments
+## モジュール化
 
-- [Jetpack Compose](https://developer.android.com/jetpack/compose) & [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/)
-- [Google Gemini API](https://ai.google.dev/)
-- [Now in Android](https://github.com/android/nowinandroid) - Architecture inspiration
+ビルド時間の短縮、関心の分離、および将来的な機能追加（サブスクリプション、統計など）への柔軟な対応のため、
+**マルチモジュールアーキテクチャ**を維持しています。
+
+**詳細ドキュメント:** [Modularization.md](https://www.google.com/search?q=docs/Modularization.md) (
+英語)
+
+---
+
+### 今回のアップデートによる追加工数見積もり (参考)
+
+* **計測・タイマー関連**: 18h
+* **外部連携・分析表示**: 12h
+* **AI基盤移行 (Vertex AI)**: 4h
+* **ユーザー基盤 (Auth/Onboarding/Billing)**: 15h
+
+---

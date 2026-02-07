@@ -1,157 +1,204 @@
-# Modularization
+# モジュール化
 
-This document explains the modularization strategy and the role of each module in the "
-TimeInventory" application.
+このドキュメントでは、「TimeInventory」アプリケーションにおけるモジュール化戦略と各モジュールの役割について説明します。
 
-## Overview
+## 概要
 
-Modularization is the practice of breaking down a monolithic, single-module codebase into loosely
-coupled, self-contained modules.
+モジュール化とは、モノリシックな（単一の）コードベースを、疎結合で自己完結した複数のモジュールに分割する手法です。
 
-### Benefits of Modularization
+### モジュール化のメリット
 
-Modularization offers many benefits, including:
+モジュール化には、以下のような多くのメリットがあります：
 
-- **Scalability**
-    - In a tightly coupled codebase, a single change can trigger a cascade of alterations. A
-      properly modularized project embraces
-      the [separation of concerns](https://en.wikipedia.org/wiki/Separation_of_concerns) principle.
-      This empowers developers with greater autonomy while enforcing architectural patterns.
+* **拡張性（スケーラビリティ）**
+*
+密結合なコードベースでは、たった一つの変更が連鎖的な修正を引き起こす可能性があります。適切にモジュール化されたプロジェクトは、[関心の分離（Separation of Concerns）](https://ja.wikipedia.org/wiki/%E9%96%A2%E5%BF%83%E3%81%AE%E5%88%86%E9%9B%A2)
+の原則を採用しています。これにより、アーキテクチャパターンを強制しつつ、開発者により大きな自律性を与えることができます。
 
-- **Ownership**
-    - A module can have a dedicated owner who is responsible for maintaining the code and tests,
-      fixing bugs, and reviewing changes.
 
-- **Encapsulation**
-    - Isolated code is easier to read, understand, test, and maintain.
+* **オーナーシップ**
+* 各モジュールに対して、コードやテストの保守、バグ修正、変更のレビューに責任を持つ専任のオーナーを割り当てることができます。
 
-- **Reduced Build Time**
-    - Leveraging Gradle's parallel and incremental builds can reduce build times.
 
-- **Reusability**
-    - Proper modularization enables opportunities for code sharing and building multiple apps for
-      different platforms from the same foundation.
+* **カプセル化**
+* 隔離されたコードは、読みやすく、理解しやすく、テストや保守も容易になります。
 
-## Modularization Strategy
 
-It's important to note that there is no single modularization strategy that fits all projects.
-However, there are general guidelines that can be followed to maximize benefits and minimize
-downsides.
+* **ビルド時間の短縮**
+* Gradleの並列ビルドやインクリメンタル（増分）ビルドを活用することで、ビルド時間を短縮できます。
 
-A basic module is simply a directory with a Gradle build script inside. Usually, a module consists
-of one or more source sets and possibly a collection of resources or assets. Modules can be built
-and tested independently. Due to Gradle's flexibility, there are few constraints on how you can
-organize your project. In general, you should strive for low coupling and high cohesion.
 
-* **Low Coupling** - Modules should be as independent as possible from one another, so that changes
-  to one module have zero or minimal impact on other modules. They should not possess knowledge of
-  the inner workings of other modules.
+* **再利用性**
+* 適切なモジュール化により、コード共有の機会が生まれ、同じ基盤から異なるプラットフォーム向けに複数のアプリを構築することが可能になります。
 
-* **High Cohesion** - A module should comprise a collection of code that acts as a system. It should
-  have clearly defined responsibilities and stay within the boundaries of certain domain knowledge.
-  For example, the `core:database` module in the TimeInventory app is responsible for accessing the
-  local database, executing queries, and managing entities.
+## モジュール化戦略
 
-## Types of Modules in TimeInventory
+すべてのプロジェクトに適合する唯一のモジュール化戦略は存在しない点に注意が必要です。しかし、メリットを最大化し、デメリットを最小限に抑えるための一般的なガイドラインは存在します。
 
-The TimeInventory app contains the following types of modules:
+基本的なモジュールは、単にGradleビルドスクリプトを含むディレクトリに過ぎません。通常、モジュールは1つ以上のソースセットと、場合によってはリソースやアセットの集合で構成されます。モジュールは独立してビルドおよびテストが可能です。Gradleの柔軟性により、プロジェクト構成の制約はほとんどありませんが、一般的には「低結合・高凝集」を目指すべきです。
 
-* `composeApp` module - Contains app-level classes and scaffolding classes that bind the rest of the
-  codebase, such as `MainActivity`, `TimeInventoryApp`, and app-level controlled navigation. The
-  `composeApp` module depends on all `feature` modules and required `core` modules.
+* **疎結合（Low Coupling）** -
+  モジュール同士は可能な限り独立しているべきです。そうすることで、あるモジュールへの変更が他のモジュールに与える影響をゼロ、または最小限に抑えられます。モジュールは、他のモジュールの内部動作に関する知識を持つべきではありません。
+* **高凝集（High Cohesion）** -
+  モジュールは、一つのシステムとして動作するコードの集合体であるべきです。明確に定義された責任を持ち、特定のドメイン知識の範囲内に留まる必要があります。例えば、TimeInventoryアプリの
+  `core:database` モジュールは、ローカルデータベースへのアクセス、クエリの実行、エンティティの管理のみを担当しています。
 
-* `feature:` modules - Feature-specific modules that are scoped to handle a single responsibility in
-  the app. If a class is needed only by one `feature` module, it should remain within that module.
-  If not, it should be extracted into an appropriate `core` module. `feature` modules should not
-  depend on other feature modules. They only depend on the `core` modules they require.
+## TimeInventoryにおけるモジュールの種類
 
-* `core:` modules - Common library modules containing auxiliary code and specific dependencies that
-  need to be shared between other modules in the app. These modules can depend on other core
-  modules, but they shouldn't depend on feature or app modules.
+TimeInventoryアプリには、以下の種類のモジュールが含まれています：
 
-## Module Structure
+* `composeApp` モジュール - `MainActivity`、`TimeInventoryApp`
+  、アプリレベルのナビゲーションなど、コードベースの残りの部分を束ねるアプリレベルのクラスや土台となるクラスを含みます。
+  `composeApp` モジュールは、すべての `feature` モジュールと必要な `core` モジュールに依存します。
+* `feature:` モジュール - アプリ内の単一の責任を処理するようにスコープされた機能特化型モジュールです。あるクラスが1つの
+  `feature` モジュールでのみ必要な場合は、そのモジュール内に留めるべきです。そうでない場合は、適切な
+  `core` モジュールに抽出する必要があります。`feature` モジュールは他の `feature`
+  モジュールに依存してはいけません。必要な `core` モジュールにのみ依存します。
+* `core:` モジュール - 補助的なコードや、アプリ内の他のモジュール間で共有する必要がある特定の依存関係を含む共通ライブラリモジュールです。これらのモジュールは他の
+  `core` モジュールに依存することはできますが、`feature` モジュールや `composeApp` モジュールに依存してはいけません。
 
-Using the above modularization strategy, the TimeInventory app has the following module structure:
+## モジュール構成
 
-![Module Dependency Diagram](screenshots/Modularization.png)
+上記のモジュール化戦略に基づき、TimeInventoryアプリは以下のモジュール構成になっています：
 
-## Module Details
+## モジュールの詳細
 
-| Name                | Responsibilities                                                                                                                                                           | Key Classes and Examples                                                                                                           |
-|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| `composeApp`        | Integrates everything required for the app to function correctly. Includes UI scaffolding, DI setup, and app-level navigation.                                             | `App` (Composable)<br>`MainActivity`<br>`TimeInventoryApplication`<br>DI modules: `dataModule`, `networkModule`, `viewModelModule` |
-| `feature:timeline`  | Provides functionality for the timeline screen. Displays events, and handles event creation/editing via a bottom sheet.                                                    | `TimelineScreen`<br>`TimelineViewModel`<br>`EventBottomSheetContent`                                                               |
-| `feature:report`    | Provides functionality for the report screen. Generates and displays AI-driven feedback on the user's daily activities.                                                    | `ReportScreen`<br>`ReportViewModel`<br>`AiFeedbackContent`                                                                         |
-| `core:data`         | Implements the Repository pattern. Fetches app data from local (database) and remote (network) sources, and provides a single point of access to data for feature modules. | `LogEventRepository`<br>`PlannedEventRepository`<br>`AiFeedbackRepository`<br>`CategoryRepository`<br>`PreferencesRepository`       |
-| `core:designsystem` | Provides the foundation of the design system. Includes customized Material 3 components, theme colors, and reusable UI elements across all features.                       | `PrimaryButton`<br>`DestructiveButton`<br>`TimePickerDialog`<br>`DropdownMenu`<br>`OutlinedTextField`                              |
-| `core:model`        | Defines pure data model classes used throughout the app. This is the most foundational module with no dependencies on other modules.                                       | `LogEvent`<br>`PlannedEvent`<br>`Category`<br>`AiFeedback`<br>`AiFeedbackMode`                                                     |
-| `core:database`     | Provides local database storage using Room. Responsible for persisting LogEvent, PlannedEvent, Category, and AiFeedback.                                                   | `TimeInventoryDatabase`<br>`LogEventDao`<br>`PlannedEventDao`<br>`AiFeedbackDao`<br>`CategoryDao`                                  |
-| `core:network`      | Responsible for making network requests and handling responses from remote data sources. Communicates with the Gemini API.                                                 | `GeminiApiClient`                                                                                                                  |
+| 名前           | 責務                                                                     | 主要クラスと例                |
+|--------------|------------------------------------------------------------------------|------------------------|
+| `composeApp` | アプリが正しく機能するために必要なすべてを統合します。UIの土台、DI（依存性注入）のセットアップ、アプリレベルのナビゲーションを含みます。 | `App` (Composable)<br> 
 
-## Module Dependency Rules
+<br>`MainActivity`<br>
 
-The module structure of TimeInventory follows these dependency rules:
+<br>`TimeInventoryApplication`<br>
 
-### Basic Rules
+<br>DIモジュール: `dataModule`, `networkModule`, `viewModelModule` |
+| `feature:timeline` |
+タイムライン画面の機能を提供します。イベントを表示し、ボトムシート経由でのイベント作成・編集を処理します。 |
+`TimelineScreen`<br>
 
-1. **Feature modules do not depend on other feature modules**
-    - `feature:timeline` and `feature:report` are independent of each other
-    - Both indirectly share data through `core:data` and `core:designsystem`
+<br>`TimelineViewModel`<br>
 
-2. **Core modules do not depend on feature modules**
-    - `core:data` is unaware of `feature:timeline` or `feature:report`
-    - This maintains the reusability of core modules
+<br>`EventBottomSheetContent` |
+| `feature:report` |
+レポート画面の機能を提供します。ユーザーの日々の活動に対するAIによるフィードバックを生成・表示します。 |
+`ReportScreen`<br>
 
-3. **`composeApp` module depends on all `feature` modules**
-    - Responsible for navigation and app-level integration.
+<br>`ReportViewModel`<br>
 
-### Data Flow Direction
+<br>`AiFeedbackContent` |
+| `core:data` |
+リポジトリ（Repository）パターンを実装します。ローカル（データベース）およびリモート（ネットワーク）ソースからアプリデータを取得し、機能モジュールに対してデータへの単一アクセスポイントを提供します。 |
+`LogEventRepository`<br>
+
+<br>`PlannedEventRepository`<br>
+
+<br>`AiFeedbackRepository`<br>
+
+<br>`CategoryRepository`<br>
+
+<br>`PreferencesRepository` |
+| `core:designsystem` | デザインシステムの基盤を提供します。カスタマイズされたMaterial
+3コンポーネント、テーマカラー、および全機能で再利用可能なUI要素を含みます。 | `PrimaryButton`<br>
+
+<br>`DestructiveButton`<br>
+
+<br>`TimePickerDialog`<br>
+
+<br>`DropdownMenu`<br>
+
+<br>`OutlinedTextField` |
+| `core:model` |
+アプリ全体で使用される純粋なデータモデルクラスを定義します。これは他のモジュールへの依存を持たない、最も基礎的なモジュールです。 |
+`LogEvent`<br>
+
+<br>`PlannedEvent`<br>
+
+<br>`Category`<br>
+
+<br>`AiFeedback`<br>
+
+<br>`AiFeedbackMode` |
+| `core:database` |
+Roomを使用したローカルデータベースストレージを提供します。LogEvent、PlannedEvent、Category、AiFeedbackの永続化を担当します。 |
+`TimeInventoryDatabase`<br>
+
+<br>`LogEventDao`<br>
+
+<br>`PlannedEventDao`<br>
+
+<br>`AiFeedbackDao`<br>
+
+<br>`CategoryDao` |
+| `core:network` | ネットワークリクエストの作成と、リモートデータソースからのレスポンス処理を担当します。Gemini
+APIと通信します。 | `GeminiApiClient` |
+
+## モジュール依存ルール
+
+TimeInventoryのモジュール構造は、以下の依存ルールに従っています：
+
+### 基本ルール
+
+1. **機能（Feature）モジュールは他の機能モジュールに依存しない**
+
+* `feature:timeline` と `feature:report` は互いに独立しています。
+* 両者は `core:data` と `core:designsystem` を通じて間接的にデータを共有します。
+
+
+2. **コア（Core）モジュールは機能モジュールに依存しない**
+
+* `core:data` は `feature:timeline` や `feature:report` を関知しません。
+* これにより、コアモジュールの再利用性が維持されます。
+
+
+3. **`composeApp` モジュールはすべての `feature` モジュールに依存する**
+
+* ナビゲーションとアプリレベルの統合を担当するためです。
+
+### データフローの方向
 
 ```
-UI Layer (feature) 
-    ↓ (data request)
-Data Layer (core:data)
-    ↓ (data retrieval)
-Data Sources (core:database, core:network)
-    ↓ (model usage)
-Models (core:model)
+UIレイヤー (feature) 
+    ↓ (データ要求)
+データレイヤー (core:data)
+    ↓ (データ取得)
+データソース (core:database, core:network)
+    ↓ (モデル使用)
+モデル (core:model)
+
 ```
 
-## Modularization Approach in TimeInventory
+## TimeInventoryにおけるモジュール化のアプローチ
 
-The modularization approach for this app was defined taking into account the TimeInventory project
-roadmap, upcoming work, and new features. Additionally, we aimed to find the right balance between
-over-modularizing a relatively small app and showcasing a modularization pattern suitable for much
-larger codebases closer to real-world production environments.
+このアプリのモジュール化アプローチは、TimeInventoryプロジェクトのロードマップ、今後の作業、および新機能を考慮して定義されました。また、比較的小規模なアプリを過度にモジュール化することと、実際の開発環境に近い大規模なコードベースに適したモジュール化パターンを示すことの適切なバランスを目指しました。
 
-### Module Division Criteria
+### モジュール分割の基準
 
-TimeInventory divides modules based on the following criteria:
+TimeInventoryでは、以下の基準に基づいてモジュールを分割しています：
 
-**Feature Division**
+**機能による分割**
 
-- Divided by screens that users can recognize
-- `timeline` (timeline screen) and `report` (report screen) have clearly distinct responsibilities
+* ユーザーが認識できる画面単位で分割しています。
+* `timeline`（タイムライン画面）と `report`（レポート画面）は、明確に異なる責務を持っています。
 
-**Data Layer Granularity**
+**データレイヤーの粒度**
 
-- Currently, `core:data` as a single module is sufficient
-- If Repositories and data sources increase in the future, further division will be considered
+* 現状では、`core:data` は単一のモジュールで十分です。
+* 将来的にリポジトリやデータソースが増えた場合は、さらなる分割を検討します。
 
-**UI Component Sharing**
+**UIコンポーネントの共有**
 
-- `core:design` provides common UI components used by multiple feature modules
-- Feature-specific UI components are placed within each feature module
+* `core:designsystem` は、複数の機能モジュールで使用される共通のUIコンポーネントを提供します。
+* 機能固有のUIコンポーネントは、各機能モジュール内に配置されます。
 
-### Future Extensibility
+### 将来の拡張性
 
-This module structure anticipates the following future extensions:
+このモジュール構造は、以下の将来的な拡張を見込んでいます：
 
-- **Adding new feature modules**: For example, `feature:settings` (settings screen)
-- **Adding core:common**: When common utility classes or extension functions increase
+* **新しい機能モジュールの追加**: 例：`feature:settings`（設定画面）など。
+* **core:commonの追加**: 共通のユーティリティクラスや拡張関数が増えた場合。
 
-## References
+## 参考文献
 
-- [Now in Android - Modularization](https://github.com/android/nowinandroid/blob/main/docs/ModularizationLearningJourney.md)
-- [Android Developers - App Architecture Guide](https://developer.android.com/topic/architecture)
-- [Gradle - Multi-Project Builds](https://docs.gradle.org/current/userguide/multi_project_builds.html)
+* [Now in Android - Modularization](https://github.com/android/nowinandroid/blob/main/docs/ModularizationLearningJourney.md)
+* [Android Developers - アプリ アーキテクチャ ガイド](https://developer.android.com/topic/architecture)
+* [Gradle - マルチプロジェクト ビルド](https://docs.gradle.org/current/userguide/multi_project_builds.html)
