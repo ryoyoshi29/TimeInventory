@@ -1,5 +1,10 @@
 # TimeInventory アプリケーション仕様書
 
+**バージョン**: 1.0.0
+**最終更新日**: 2026-02-08
+
+---
+
 ## 1. アプリケーション概要
 
 ### 1.1 目的
@@ -10,1086 +15,749 @@ TimeInventoryは、「理想の1日（計画）」と「現実の1日（実績�
 - 生産性向上を目指すビジネスパーソン
 - 自己分析・自己改善に関心のある学生
 
-### 1.3 主な特徴
-- **視覚的な時間比較**: 計画と実績を左右に並べて24時間タイムライン表示
-- **AI駆動のフィードバック**: Gemini 2.5 Flash LiteによるKPT形式の分析
-- **マルチプラットフォーム対応**: AndroidおよびiOSで動作
-- **オフラインファースト**: ローカルデータベース（Room）による高速動作
+### 1.3 コア機能
+- **24時間タイムライン表示**: 計画と実績を並べて視覚的に比較
+- **AI分析機能**: 1日の振り返りをKPT形式で自動生成
+- **カテゴリ管理**: 活動をカテゴリ別に色分けして管理
+- **週間カレンダー**: スワイプ操作で日付を切り替え
+
+### 1.4 対応プラットフォーム
+- Android（API Level 24以上）
+- iOS（iOS 15.0以上）
 
 ---
 
-## 2. 機能要件
+## 2. 画面構成
 
-### 2.1 タイムライン機能
+### 2.1 アプリケーション全体構造
 
-#### 2.1.1 タイムライン表示
-- **3列レイアウト構成**:
-  - 左列: 時間ラベル（00:00～23:59）
-  - 中央列: 実績ログ（LogEvent）
-  - 右列: 計画イベント（PlannedEvent）
-- **24時間連続表示**: 縦スクロール可能
-- **イベントブロック仕様**:
-  - 開始時刻と期間に基づいて垂直位置と高さを自動計算
-  - カテゴリカラーを30%透明度で表示
-  - 左側に濃いカラーバー（カテゴリ識別用）
-  - 20分未満: ラベル非表示
-  - 20～30分: ラベルのみ
-  - 30分以上: パディング付きラベル
-  - 最小高さ: 8dp
+```
+┌─────────────────────────────────────┐
+│         メイン画面領域               │
+│   (タイムライン or レポート)         │
+│                                     │
+└─────────────────────────────────────┘
+│  [Timeline] [Report]                │  ← ボトムナビゲーション
+└─────────────────────────────────────┘
+```
 
-#### 2.1.2 日付選択
-- **週カレンダー**: スワイプ可能な7日間表示
-- **日付ナビゲーション**: 前週/次週への移動
-- **当日表示**: 選択中の日付をハイライト
+**ボトムナビゲーションバー**:
+- **タイムライン**: 初期表示画面（アイコン: ViewTimeline）
+- **レポート**: AI分析画面（アイコン: Analytics）
 
-#### 2.1.3 イベント管理（計画）
-- **作成・編集フォーム**（ボトムシート形式）:
-  - 活動名（必須）
-  - カテゴリ選択（ドロップダウン）
-  - 開始日時（DateTimePicker）
-  - 終了日時（DateTimePicker）
-  - メモ（任意）
-  - 繰り返しルール（任意）
-- **繰り返しルール設定**:
-  - 頻度: 毎日/毎週/毎月
-  - 間隔: 1～99
-  - 曜日指定（週次の場合）
-  - 終了条件: 終了日または回数
-- **操作**:
-  - 新規作成
-  - 編集（タップで表示）
-  - 削除（確認ダイアログ付き）
-
-#### 2.1.4 ログ記録（実績）
-- **タイマー機能**:
-  - 開始: カテゴリ選択で計測開始
-  - 停止: 実行中のタイマーを停止
-  - 自動記録: 開始・終了時刻を自動保存
-- **手動記録**:
-  - 活動名、カテゴリ、開始/終了時刻を手動入力
-  - 過去のログを編集可能
-- **バリデーション**:
-  - 1分未満のログは無効
-  - 同時実行中のタイマーは1つまで
-  - 終了時刻 > 開始時刻のチェック
-
-#### 2.1.5 カテゴリ管理
-- **デフォルトカテゴリ（7種類）**:
-  | カテゴリ | 色 | ARGB値 |
-  |---------|---|--------|
-  | 仕事 | Blue | 0xFF2196F3 |
-  | 勉強 | Green | 0xFF4CAF50 |
-  | 運動 | Orange | 0xFFFF9800 |
-  | 趣味 | Purple | 0xFF9C27B0 |
-  | 睡眠 | Blue Grey | 0xFF607D8B |
-  | 食事 | Deep Orange | 0xFFFF5722 |
-  | その他 | Grey | 0xFF9E9E9E |
-- **カスタムカテゴリ**:
-  - 作成: 名前、色、表示順序を設定
-  - 編集: 既存カテゴリの変更
-  - 削除: 関連イベントがない場合のみ削除可能（RESTRICT制約）
+**画面遷移**:
+- タブをタップして画面を切り替え
+- 前の画面の状態を保持（スクロール位置など）
 
 ---
 
-### 2.2 レポート機能
+## 3. タイムライン画面仕様
 
-#### 2.2.1 AI分析
-- **実行トリガー**: 「AI分析」ボタンをタップ
-- **分析対象**: 選択した日付の全ログイベント
-- **分析形式**: KPT（Keep-Problem-Try）フレームワーク
-- **生成内容**:
-  - **Summary**: その日の全体概要（50～100文字）
-  - **Keep**: 続けるべき良い習慣（タイトル + 説明）
-  - **Problem**: 改善すべき問題点（タイトル + 説明）
-  - **Try**: 次に試すべきアクション（タイトル + 説明）
+### 3.1 画面レイアウト
 
-#### 2.2.2 フィードバック表示
-- **AIアシスタントカード**:
-  - アイコン: ロボット
-  - タイトル: "AI アシスタント"
-  - Summary を表示
-- **KPTカード（3種類）**:
-  | 種類 | アイコン | 色 | 内容 |
-  |------|---------|---|------|
-  | Keep | ✓ | Green | 続けること |
-  | Problem | ⚠ | Orange | 問題点 |
-  | Try | ✨ | Blue | 次に試すこと |
-- **レイアウト**: 縦スクロール可能なカードリスト
+```
+┌─────────────────────────────────────┐
+│ 📅 January 2026                     │  ← トップバー（月・年表示）
+├─────────────────────────────────────┤
+│  ← 週カレンダー（スワイプ可能）→    │
+│   S   M   T   W   T   F   S         │
+│  ①  ②  ③  ④  ⑤  ⑥  ⑦          │
+├─────────────────────────────────────┤
+│       │  Log     │  Schedule        │  ← カラムヘッダー
+├───────┼──────────┼──────────────────┤
+│ 00:00 │          │                  │
+│ 01:00 │ [ブロック]│ [ブロック]       │
+│ 02:00 │          │                  │
+│  ...  │   ...    │    ...           │
+│ 23:00 │          │                  │
+└─────────────────────────────────────┘
+```
 
-#### 2.2.3 キャッシング
-- **保存場所**: ローカルデータベース（ai_feedbackテーブル）
-- **キャッシュキー**: 対象日（targetDate）
-- **再利用**: 同じ日付の分析は再実行せずキャッシュを使用
+### 3.2 トップバー
+
+**表示内容**:
+- 選択中の月名（例: "January", "February"）
+- 年（現在年と異なる場合のみ表示、例: "2024"）
+
+### 3.3 週カレンダー
+
+**機能**:
+- 7日分の日付を表示（日曜始まり）
+- 左右スワイプで週を切り替え
+- タップで日付を選択
+
+**日付アイテムの表示**:
+- 上段: 曜日の頭文字（S, M, T, W, T, F, S）
+- 下段: 日付（1～31）
+
+**視覚状態**:
+
+| 状態 | 背景 | 日付色 | 曜日色 |
+|------|------|--------|--------|
+| 選択中（本日） | プライマリ色 | 白 | プライマリ色 |
+| 選択中（他日） | グレー背景 | 黒 | グレー |
+| 未選択（本日） | 透明 | 黒 | プライマリ色 |
+| 未選択（他日） | 透明 | 黒 | グレー |
+
+**アニメーション**:
+- 選択時に拡大（スケール: 0.95 → 1.0）
+- 背景色と文字色がスムーズに変化
+
+### 3.4 タイムライングリッド
+
+**3列構成**:
+
+| 列 | 幅 | 内容 |
+|----|-----|------|
+| 時間列 | 56dp | 00:00～23:00の時刻ラベル |
+| Log列 | 可変 | 実績ログ（LogEvent） |
+| Schedule列 | 可変 | 計画イベント（PlannedEvent） |
+
+**グリッド仕様**:
+- 1時間あたりの高さ: 60dp
+- 合計高さ: 1440dp（24時間 × 60dp）
+- 縦スクロール可能
+
+### 3.5 イベントブロック（TimeBlock）
+
+**配置計算**:
+- 垂直位置 = (時 × 60 + 分) × 1時間の高さ ÷ 60
+- ブロック高さ = 期間（分） × 1時間の高さ ÷ 60
+- 最小高さ: 8dp（短時間イベントも視認可能）
+
+**例**: 08:30～10:15のイベント（105分間）
+- 開始位置: (8 × 60 + 30) × 60 ÷ 60 = 510dp
+- 高さ: 105 × 60 ÷ 60 = 105dp
+
+**視覚デザイン**:
+- 背景色: カテゴリ色（透明度30%）
+- 左フチ: 濃いカテゴリ色の縦線（幅4dp）
+- ラベル: 活動名を表示
+
+**ラベル表示ルール**:
+
+| イベント期間 | ラベル表示 | フォントサイズ | パディング |
+|-------------|-----------|--------------|-----------|
+| 20分未満 | 非表示 | - | - |
+| 20～30分 | 表示 | 小 | なし |
+| 30分以上 | 表示 | 中 | 上部2dp |
+
+**操作**:
+- **タップ**: イベント編集ボトムシートを開く
+- **長押し**: 新規イベント作成ボトムシートを開く（押した時刻で初期化）
+
+### 3.6 空きスロットの操作
+
+**1時間スロットの長押し**:
+- 背景色が薄く変化（プレス状態）
+- 新規イベント作成ボトムシートが開く
+- 開始時刻: 長押ししたスロットの時刻
+- 終了時刻: 次の1時間後
+
+### 3.7 イベント作成・編集ボトムシート
+
+**4つのボトムシートタイプ**:
+1. **ログ新規作成** (Create Log)
+2. **予定新規作成** (Create Planned)
+3. **ログ編集** (Edit Log)
+4. **予定編集** (Edit Planned)
+
+**ボトムシートレイアウト**:
+
+```
+┌────────────────────────────────────┐
+│ Create New Event / Edit Event      │  ← タイトル
+├────────────────────────────────────┤
+│ Activity                           │
+│ [                                ] │  ← テキスト入力
+│ (e.g. Math study, Budget meeting) │
+├────────────────────────────────────┤
+│ Category                           │
+│ [Work ▼]                           │  ← ドロップダウン
+├────────────────────────────────────┤
+│ Start Time      │ End Time         │
+│ [08:30]         │ [10:00]          │  ← 時刻カード
+├────────────────────────────────────┤
+│ Memo                               │
+│ [                                ] │  ← 複数行テキスト
+│ [                                ] │
+│ (Enter details or reflections...) │
+├────────────────────────────────────┤
+│ [Delete]              [Create/Save]│  ← ボタン
+└────────────────────────────────────┘
+```
+
+**入力フィールド仕様**:
+
+| フィールド | 入力形式 | 必須 | 初期値 | プレースホルダー |
+|-----------|---------|------|--------|----------------|
+| Activity | テキスト（1行） | ○ | 空 | "e.g. Math study, Budget meeting" |
+| Category | ドロップダウン選択 | ○ | 先頭カテゴリ | - |
+| Start Time | 時刻ピッカー | ○ | 指定時刻 | - |
+| End Time | 時刻ピッカー | ○ | 指定時刻 | - |
+| Memo | テキスト（複数行） | × | 空 | "Enter details or reflections..." |
+
+**時刻ピッカー**:
+- 時刻カードをタップすると時刻選択ダイアログが表示
+- 時・分を個別に選択可能
+- 選択後、カードの表示が更新される
+
+**バリデーション**:
+- Activity: 空白不可
+- Category: 必ず選択必要
+- Start Time < End Time: 開始時刻は終了時刻より前である必要
+  - 違反時: 終了時刻が自動的に開始時刻と同じに調整される
+
+**ボタン動作**:
+- **Create/Save**:
+  - バリデーション通過時のみ有効化
+  - タップでイベントを保存してボトムシートを閉じる
+- **Delete**:
+  - 編集モード時のみ表示
+  - タップでイベントを削除してボトムシートを閉じる
+
+### 3.8 カテゴリ管理
+
+**デフォルトカテゴリ（初回起動時に自動作成）**:
+
+| カテゴリ名 | 色 | 用途 |
+|-----------|---|------|
+| Work（仕事） | 青 | 業務関連の活動 |
+| Study（勉強） | 緑 | 学習・研究活動 |
+| Exercise（運動） | オレンジ | 運動・トレーニング |
+| Hobby（趣味） | 紫 | 趣味・娯楽活動 |
+| Sleep（睡眠） | グレー | 睡眠時間 |
+| Meal（食事） | 濃いオレンジ | 食事時間 |
+| Other（その他） | 薄いグレー | その他の活動 |
+
+**カテゴリの役割**:
+- イベントの色分け（視覚的な識別）
+- ドロップダウンでの選択肢として表示
+- 表示順序の制御
 
 ---
 
-### 2.3 ナビゲーション
+## 4. レポート画面仕様
 
-#### 2.3.1 ボトムナビゲーションバー
-- **タイムラインタブ**:
-  - アイコン: ViewTimeline
-  - 初期表示画面
-- **レポートタブ**:
-  - アイコン: Analytics
-  - AI分析画面
+### 4.1 画面レイアウト
 
-#### 2.3.2 ナビゲーション動作
-- **状態保存**: タブ切り替え時にスクロール位置を保持
-- **バックスタック制御**: `popUpTo`でスタックをクリア（メモリ効率化）
-- **単一インスタンス**: `launchSingleTop`で重複画面を防止
+```
+┌─────────────────────────────────────┐
+│ AI Feedback                         │  ← トップバー
+├─────────────────────────────────────┤
+│                                     │
+│    (画面の状態に応じたコンテンツ)    │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+### 4.2 画面の4つの状態
+
+#### 状態1: Initial（初期状態）
+
+**表示内容**:
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│         ✨                          │
+│                                     │
+│   AI will analyze your day          │
+│ Compare plans with actual results   │
+│  and get feedback in KPT format.    │
+│                                     │
+│    [✨ Generate Feedback]           │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+- アイコン: 星マーク（サイズ大、プライマリ色）
+- 説明文: 3行のテキスト
+- ボタン: "Generate Feedback"（画面幅の70%）
+
+**ボタン操作**:
+- タップで AI 分析を開始
+- Loading 状態に遷移
+
+#### 状態2: Loading（分析中）
+
+**表示内容**:
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│          ⟳                          │
+│                                     │
+│  AI is generating feedback...       │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+- スピナー（円形プログレスインジケーター）
+- メッセージ: "AI is generating feedback..."
+
+#### 状態3: Success（分析完了）
+
+**表示内容**:
+
+```
+┌─────────────────────────────────────┐
+│ 💡 AI Assistant          2026-02-08 │
+│ Brief summary of your day based on  │
+│ the analysis of planned vs actual.  │
+├─────────────────────────────────────┤
+│ 💡 KPT Analysis Report              │
+├─────────────────────────────────────┤
+│ ✓ Keep Title                        │
+│ What went well and should continue  │
+│ doing...                            │
+├─────────────────────────────────────┤
+│ ⚠ Problem Title                     │
+│ What needs improvement and why...   │
+├─────────────────────────────────────┤
+│ ✨ Try Title                         │
+│ Specific action plan for next step..│
+└─────────────────────────────────────┘
+```
+
+**AI アシスタントカード**:
+- アイコン: 電球マーク（丸い背景付き）
+- タイトル: "AI Assistant"（太字）
+- 日付: 対象日（右側表示）
+- 要約: 1日の全体的なサマリー（2～3行）
+
+**KPT 分析カード（3枚）**:
+
+1. **Keep カード**（緑色）
+   - アイコン: チェックマーク
+   - タイトル: "Keep (What went well)"
+   - 説明: 続けるべき良い習慣の詳細
+
+2. **Problem カード**（オレンジ色）
+   - アイコン: 警告マーク
+   - タイトル: "Problem (Challenges)"
+   - 説明: 改善すべき問題点の詳細
+
+3. **Try カード**（青色）
+   - アイコン: 星マーク
+   - タイトル: "Try (Action Plan)"
+   - 説明: 次に試すべきアクションプランの詳細
+
+**カードデザイン**:
+- 角丸の矩形カード
+- 左側にアイコン（丸い背景付き）
+- タイトルは太字
+- 説明文は通常フォント
+
+#### 状態4: Error（エラー発生）
+
+**表示内容**:
+
+```
+┌─────────────────────────────────────┐
+│                                     │
+│      An error occurred              │
+│                                     │
+│ [エラーメッセージ]                   │
+│                                     │
+│         [Retry]                     │
+│                                     │
+└─────────────────────────────────────┘
+```
+
+- エラー見出し: "An error occurred"（赤色）
+- エラーメッセージ: 具体的なエラー内容
+- ボタン: "Retry"（枠線ボタン）
+
+**ボタン操作**:
+- タップで再度 AI 分析を実行
+- Loading 状態に遷移
+
+### 4.3 AI分析の実行
+
+**分析対象**:
+- 対象日: 現在の日付
+- 計画データ: 対象日のPlannedEvent一覧
+- 実績データ: 対象日のLogEvent一覧
+
+**データフォーマット**:
+
+計画イベント:
+```
+- 09:00 - 10:00: [Work] Team meeting
+- 11:00 - 12:00: [Study] JavaScript tutorial
+```
+
+実績ログ:
+```
+- 09:05 - 10:30: [Work] Email and team meeting
+- 11:15 - 12:45: [Study] React documentation
+```
+
+**分析プロセス**:
+1. ユーザーが "Generate Feedback" をタップ
+2. 計画と実績データを収集
+3. AI分析リクエストを送信
+4. KPT形式のフィードバックを受信
+5. 画面に結果を表示
+
+**KPT形式の出力**:
+- **Summary**: 全体的な1日の評価（50～100文字）
+- **Keep**: 続けるべき行動（タイトル + 詳細説明）
+- **Problem**: 改善すべき課題（タイトル + 詳細説明）
+- **Try**: 次に試すアクション（タイトル + 詳細説明）
 
 ---
 
-## 3. 非機能要件
+## 5. データモデル
 
-### 3.1 パフォーマンス
-- **起動時間**: 3秒以内（初回起動時のカテゴリ初期化含む）
-- **画面遷移**: 300ms以内
-- **AI分析応答時間**: 5秒以内（ネットワーク遅延除く）
-- **スクロール性能**: 60fps以上（24時間タイムライン）
+### 5.1 LogEvent（実績ログ）
 
-### 3.2 セキュリティ
-- **APIキー管理**: `local.properties`に保存（Gitコミット対象外）
-- **データ暗号化**: Room データベースの暗号化は未実装（将来検討）
-- **通信**: HTTPS（Gemini API）
+**属性**:
+- ID: 一意識別子
+- 活動名: イベントの内容
+- カテゴリ: 関連付けられたカテゴリ
+- 開始日時: イベント開始の日時
+- 終了日時: イベント終了の日時（実行中の場合はnull）
+- メモ: 追加の詳細情報
 
-### 3.3 可用性
-- **オフライン動作**: タイムライン機能は完全オフライン対応
-- **ネットワーク要件**: AI分析時のみインターネット接続必須
+**用途**:
+- 実際に行った活動の記録
+- タイムライングリッドの「Log」列に表示
 
-### 3.4 保守性
-- **アーキテクチャ**: 2レイヤー構成（UI + Data）
-- **モジュール設計**: 機能別・レイヤー別の分離
-- **テスタビリティ**: Repository インターフェースによるモック化対応
+### 5.2 PlannedEvent（計画イベント）
 
-### 3.5 プラットフォーム対応
-- **Android**: API Level 24（Android 7.0）以上
-- **iOS**: iOS 15.0 以上
+**属性**:
+- ID: 一意識別子
+- 活動名: イベントの内容
+- カテゴリ: 関連付けられたカテゴリ
+- 開始日時: イベント開始予定の日時
+- 終了日時: イベント終了予定の日時
+- メモ: 追加の詳細情報
+- 繰り返しルール: 定期的なイベントの設定（オプション）
+- 終日フラグ: 終日イベントかどうか
+- データソース: 手動入力 / 外部カレンダー連携
+- アクティブフラグ: 論理削除用
 
----
+**用途**:
+- 予定している活動の記録
+- タイムライングリッドの「Schedule」列に表示
 
-## 4. 技術スタック
+### 5.3 Category（カテゴリ）
 
-### 4.1 開発言語
-- **Kotlin**: 2.3.0+
+**属性**:
+- ID: 一意識別子
+- カテゴリ名: 表示名
+- 色: ARGB形式の色コード
+- 表示順序: ドロップダウンでの表示順
 
-### 4.2 UIフレームワーク
-- **Compose Multiplatform**: 1.9.3+
-- **Material 3**: Material Design 3準拠
+**用途**:
+- イベントの分類と色分け
+- ドロップダウンメニューでの選択肢
 
-### 4.3 アーキテクチャコンポーネント
-| 用途 | ライブラリ |
-|------|-----------|
-| 非同期処理 | Kotlin Coroutines & Flow |
-| 依存性注入 | Koin |
-| ローカルDB | Room (KMP対応版) |
-| ネットワーク | Ktor Client |
-| 日付処理 | kotlinx-datetime |
-| UUID生成 | kotlinx-uuid |
+### 5.4 AiFeedback（AI分析結果）
 
-### 4.4 外部サービス
-- **AI**: Google Gemini 2.5 Flash Lite API
+**属性**:
+- ID: 一意識別子
+- 対象日: 分析対象の日付
+- Summary: 全体概要
+- Keep: 続けること（タイトル + 説明）
+- Problem: 問題点（タイトル + 説明）
+- Try: 次に試すこと（タイトル + 説明）
 
----
-
-## 5. アーキテクチャ
-
-### 5.1 全体構成
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    UI Layer                             │
-│  ┌─────────────────┐         ┌─────────────────┐       │
-│  │  TimelineScreen │         │   ReportScreen  │       │
-│  └────────┬────────┘         └────────┬────────┘       │
-│           │                           │                 │
-│  ┌────────▼────────┐         ┌───────▼─────────┐       │
-│  │ TimelineViewModel│         │ ReportViewModel │       │
-│  │  (StateFlow)     │         │  (StateFlow)    │       │
-│  └────────┬────────┘         └────────┬────────┘       │
-└───────────┼─────────────────────────────┼───────────────┘
-            │                             │
-            │      Repository Interface   │
-            │      (Single Source of Truth)
-            │                             │
-┌───────────▼─────────────────────────────▼───────────────┐
-│                   Data Layer                            │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │        Repository Implementation                 │   │
-│  │  ├─ CategoryRepository                           │   │
-│  │  ├─ LogEventRepository                           │   │
-│  │  ├─ PlannedEventRepository                       │   │
-│  │  └─ AiFeedbackRepository                         │   │
-│  └───────┬───────────────────────────┬──────────────┘   │
-│          │                           │                  │
-│  ┌───────▼────────┐         ┌───────▼──────────┐       │
-│  │  Room Database │         │ GeminiApiClient  │       │
-│  │  (DAO)         │         │ (Ktor)           │       │
-│  └────────────────┘         └──────────────────┘       │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 5.2 モジュール構成
-
-```
-TimeInventory/
-├── composeApp/                     # アプリ統合層
-│   ├── di/                         # DIモジュール定義
-│   ├── navigation/                 # ナビゲーション定義
-│   └── ui/                         # MainScreen
-│
-├── feature/                        # フィーチャーモジュール
-│   ├── timeline/                   # タイムライン機能
-│   │   ├── component/              # UI コンポーネント
-│   │   │   ├── TimelineGrid.kt
-│   │   │   ├── TimeBlock.kt
-│   │   │   ├── TimelineHeader.kt
-│   │   │   └── EventBottomSheetContent.kt
-│   │   ├── TimelineScreen.kt
-│   │   ├── TimelineViewModel.kt
-│   │   └── TimelineUiState.kt
-│   │
-│   └── report/                     # レポート機能
-│       ├── component/
-│       │   ├── AiFeedbackContent.kt
-│       │   ├── AiAssistantCard.kt
-│       │   └── KptCard.kt
-│       ├── ReportScreen.kt
-│       ├── ReportViewModel.kt
-│       └── ReportUiState.kt
-│
-├── core/                           # コア機能
-│   ├── model/                      # ドメインモデル（依存なし）
-│   │   ├── Category.kt
-│   │   ├── LogEvent.kt
-│   │   ├── PlannedEvent.kt
-│   │   └── AiFeedback.kt
-│   │
-│   ├── data/                       # データ層
-│   │   ├── repository/             # Repository インターフェース
-│   │   ├── repository/impl/        # Repository 実装
-│   │   └── mapper/                 # Entity ↔ Model 変換
-│   │
-│   ├── database/                   # Room DB
-│   │   ├── entity/                 # Entity定義
-│   │   ├── dao/                    # DAO定義
-│   │   └── TimeInventoryDatabase.kt
-│   │
-│   ├── network/                    # ネットワーク層
-│   │   ├── GeminiApiClient.kt
-│   │   └── dto/                    # API レスポンス DTO
-│   │
-│   └── designsystem/               # 共通UIコンポーネント
-│       ├── component/
-│       │   ├── PrimaryButton.kt
-│       │   ├── DestructiveButton.kt
-│       │   ├── OutlinedTextField.kt
-│       │   ├── DropdownMenu.kt
-│       │   └── TimePickerDialog.kt
-│       └── theme/                  # テーマ定義
-│
-└── gradle/                         # ビルド設定
-```
-
-### 5.3 依存関係ルール
-
-1. **Feature モジュール間は依存禁止**
-   - `feature:timeline` ← ✗ → `feature:report`
-
-2. **Feature は Core に依存可能**
-   - `feature:timeline` → `core:model`, `core:data`, `core:designsystem`
-
-3. **Core モジュール間の依存**
-   - `core:data` → `core:model`, `core:database`, `core:network`
-   - `core:database` → `core:model`
-   - `core:network` → `core:model`
+**用途**:
+- レポート画面での表示
+- 過去の分析結果の再利用（キャッシング）
 
 ---
 
-## 6. データモデル仕様
+## 6. ユーザー操作フロー
 
-### 6.1 PlannedEvent（計画イベント）
-
-```kotlin
-data class PlannedEvent(
-    val id: Uuid,                           // 一意識別子
-    val activity: String,                   // 活動内容
-    val category: Category,                 // カテゴリ
-    val startDateTime: Instant,             // 開始日時（UTC）
-    val endDateTime: Instant,               // 終了日時（UTC）
-    val isAllDay: Boolean = false,          // 終日フラグ
-    val recurrenceRule: RecurrenceRule?,    // 繰り返しルール（RFC 5545準拠）
-    val memo: String,                       // メモ
-    val externalCalendarId: String?,        // 外部カレンダーID（将来の連携用）
-    val source: PlannedEventSource,         // データソース
-    val isActive: Boolean = true            // アクティブフラグ（論理削除）
-)
-
-enum class PlannedEventSource {
-    MANUAL,              // 手動入力
-    APPLE_CALENDAR,      // Apple カレンダー連携（未実装）
-    GOOGLE_CALENDAR      // Google カレンダー連携（未実装）
-}
-```
-
-#### 6.1.1 RecurrenceRule（繰り返しルール）
-
-```kotlin
-data class RecurrenceRule(
-    val frequency: Frequency,               // 頻度
-    val interval: Int = 1,                  // 間隔（例: 2週間ごと = 2）
-    val daysOfWeek: List<DayOfWeek>?,       // 繰り返し曜日（週次のみ）
-    val endDate: LocalDate?,                // 終了日
-    val count: Int?                         // 繰り返し回数
-)
-
-enum class Frequency {
-    DAILY,               // 毎日
-    WEEKLY,              // 毎週
-    MONTHLY              // 毎月
-}
-```
-
-**バリデーション規則**:
-- `interval` は 1～99
-- `endDate` と `count` は排他的（どちらか一方のみ）
-- `daysOfWeek` は `WEEKLY` の場合必須
-
----
-
-### 6.2 LogEvent（実績ログ）
-
-```kotlin
-data class LogEvent(
-    val id: Uuid,                           // 一意識別子
-    val startDateTime: Instant,             // 開始日時（UTC）
-    val endDateTime: Instant?,              // 終了日時（null = 実行中）
-    val activity: String,                   // 活動内容
-    val category: Category,                 // カテゴリ
-    val memo: String                        // メモ
-) {
-    // 計算プロパティ
-    val isActive: Boolean                   // endDateTime == null
-        get() = endDateTime == null
-
-    val duration: Duration                  // 経過時間
-        get() = if (endDateTime != null) {
-            endDateTime - startDateTime
-        } else {
-            Clock.System.now() - startDateTime
-        }
-
-    // ビジネスロジック
-    fun complete(endDateTime: Instant): LogEvent {
-        require(endDateTime > startDateTime) { "終了時刻は開始時刻より後である必要があります" }
-        return copy(endDateTime = endDateTime)
-    }
-
-    fun isValidDuration(): Boolean {
-        return duration.inWholeMinutes >= 1  // 1分以上
-    }
-}
-```
-
-**バリデーション規則**:
-- `activity` は空文字列不可
-- `startDateTime` < `endDateTime`（nullでない場合）
-- 有効なログは 1分以上
-
----
-
-### 6.3 Category（カテゴリ）
-
-```kotlin
-data class Category(
-    val id: Uuid,                           // 一意識別子
-    val name: String,                       // カテゴリ名
-    val colorArgb: Int,                     // ARGB形式の色（例: 0xFF2196F3）
-    val sortOrder: Int = 0                  // 表示順序
-)
-```
-
-**デフォルトカテゴリ**:
-```kotlin
-object DefaultCategoryColors {
-    val Work = Color(0xFF2196F3)            // 仕事 - Blue
-    val Study = Color(0xFF4CAF50)           // 勉強 - Green
-    val Exercise = Color(0xFFFF9800)        // 運動 - Orange
-    val Hobby = Color(0xFF9C27B0)           // 趣味 - Purple
-    val Sleep = Color(0xFF607D8B)           // 睡眠 - Blue Grey
-    val Meal = Color(0xFFFF5722)            // 食事 - Deep Orange
-    val Other = Color(0xFF9E9E9E)           // その他 - Grey
-}
-```
-
----
-
-### 6.4 AiFeedback（AI分析結果）
-
-```kotlin
-data class AiFeedback(
-    val id: Uuid,                           // 一意識別子
-    val targetDate: LocalDate,              // 対象日（YYYY-MM-DD）
-    val summary: String,                    // 全体概要
-    val keep: KptElement,                   // 続けること
-    val problem: KptElement,                // 問題点
-    val tryAction: KptElement               // 次に試すこと
-)
-
-data class KptElement(
-    val title: String,                      // 見出し（10～30文字）
-    val description: String                 // 詳細説明（50～150文字）
-)
-```
-
----
-
-## 7. データベース設計
-
-### 7.1 テーブル定義
-
-#### 7.1.1 category テーブル
-
-| カラム名 | 型 | 制約 | 説明 |
-|---------|---|------|------|
-| id | TEXT | PRIMARY KEY | UUID |
-| name | TEXT | NOT NULL | カテゴリ名 |
-| colorArgb | INTEGER | NOT NULL | ARGB色コード |
-| sortOrder | INTEGER | NOT NULL, DEFAULT 0 | 表示順序 |
-
-**インデックス**: なし
-
----
-
-#### 7.1.2 log_event テーブル
-
-| カラム名 | 型 | 制約 | 説明 |
-|---------|---|------|------|
-| id | TEXT | PRIMARY KEY | UUID |
-| startDateTime | INTEGER | NOT NULL | 開始タイムスタンプ（ミリ秒） |
-| endDateTime | INTEGER | NULL | 終了タイムスタンプ（ミリ秒） |
-| activity | TEXT | NOT NULL | 活動内容 |
-| categoryId | TEXT | NOT NULL, FK | カテゴリID |
-| memo | TEXT | NOT NULL, DEFAULT '' | メモ |
-
-**外部キー**:
-- `categoryId` → `category(id)` ON DELETE RESTRICT
-
-**インデックス**:
-- `idx_log_event_start_date` ON (startDateTime)
-- `idx_log_event_end_date` ON (endDateTime)
-- `idx_log_event_category` ON (categoryId)
-
----
-
-#### 7.1.3 planned_event テーブル
-
-| カラム名 | 型 | 制約 | 説明 |
-|---------|---|------|------|
-| id | TEXT | PRIMARY KEY | UUID |
-| activity | TEXT | NOT NULL | 活動内容 |
-| categoryId | TEXT | NOT NULL, FK | カテゴリID |
-| startDateTime | INTEGER | NOT NULL | 開始タイムスタンプ |
-| endDateTime | INTEGER | NOT NULL | 終了タイムスタンプ |
-| isAllDay | INTEGER | NOT NULL, DEFAULT 0 | 終日フラグ（0/1） |
-| recurrenceRuleJson | TEXT | NULL | 繰り返しルールJSON |
-| memo | TEXT | NOT NULL, DEFAULT '' | メモ |
-| externalCalendarId | TEXT | NULL | 外部カレンダーID |
-| source | TEXT | NOT NULL, DEFAULT 'MANUAL' | データソース |
-| isActive | INTEGER | NOT NULL, DEFAULT 1 | アクティブフラグ |
-
-**外部キー**:
-- `categoryId` → `category(id)` ON DELETE RESTRICT
-
-**インデックス**:
-- `idx_planned_event_start_date` ON (startDateTime)
-- `idx_planned_event_category` ON (categoryId)
-- `idx_planned_event_active` ON (isActive)
-
----
-
-#### 7.1.4 ai_feedback テーブル
-
-| カラム名 | 型 | 制約 | 説明 |
-|---------|---|------|------|
-| id | TEXT | PRIMARY KEY | UUID |
-| targetDate | TEXT | NOT NULL, UNIQUE | 対象日（YYYY-MM-DD） |
-| summary | TEXT | NOT NULL | 全体概要 |
-| keepTitle | TEXT | NOT NULL | Keep 見出し |
-| keepDescription | TEXT | NOT NULL | Keep 説明 |
-| problemTitle | TEXT | NOT NULL | Problem 見出し |
-| problemDescription | TEXT | NOT NULL | Problem 説明 |
-| tryTitle | TEXT | NOT NULL | Try 見出し |
-| tryDescription | TEXT | NOT NULL | Try 説明 |
-
-**インデックス**:
-- `idx_ai_feedback_date` ON (targetDate) UNIQUE
-
----
-
-### 7.2 主要クエリ
-
-#### 7.2.1 日付範囲でログイベント取得
-
-```sql
-SELECT log_event.*, category.*
-FROM log_event
-INNER JOIN category ON log_event.categoryId = category.id
-WHERE startDateTime >= :startTimestamp
-  AND startDateTime < :endTimestamp
-ORDER BY startDateTime ASC
-```
-
-#### 7.2.2 実行中のタイマー取得
-
-```sql
-SELECT log_event.*, category.*
-FROM log_event
-INNER JOIN category ON log_event.categoryId = category.id
-WHERE endDateTime IS NULL
-LIMIT 1
-```
-
-#### 7.2.3 計画イベント取得（繰り返し展開）
-
-```sql
-SELECT planned_event.*, category.*
-FROM planned_event
-INNER JOIN category ON planned_event.categoryId = category.id
-WHERE isActive = 1
-  AND startDateTime >= :startTimestamp
-  AND startDateTime < :endTimestamp
-ORDER BY startDateTime ASC
-```
-
-**Note**: 繰り返しイベントは Repository 層で展開処理を実施
-
----
-
-## 8. API仕様（Gemini連携）
-
-### 8.1 エンドポイント
-
-**ベースURL**: `https://generativelanguage.googleapis.com/v1beta`
-
-**エンドポイント**: `POST /models/gemini-2.5-flash-lite:generateContent`
-
-### 8.2 リクエスト仕様
-
-#### 8.2.1 ヘッダー
-```
-Content-Type: application/json
-x-goog-api-key: {GEMINI_API_KEY}
-```
-
-#### 8.2.2 リクエストボディ
-
-```json
-{
-  "contents": [
-    {
-      "role": "user",
-      "parts": [
-        {
-          "text": "{プロンプト文字列}"
-        }
-      ]
-    }
-  ],
-  "generationConfig": {
-    "temperature": 0.7,
-    "topK": 40,
-    "topP": 0.95,
-    "maxOutputTokens": 1024,
-    "responseMimeType": "application/json"
-  }
-}
-```
-
-#### 8.2.3 プロンプト構造
+### 6.1 新規ログイベントの作成
 
 ```
-あなたは時間管理のエキスパートです。
-以下のログデータを分析し、KPT形式でフィードバックを提供してください。
-
-【対象日】
-{targetDate}
-
-【ログデータ】
-{logEvents の一覧}
-- 00:00-01:30: 睡眠
-- 07:00-08:00: 朝食
-- ...
-
-【出力形式】
-以下のJSON形式で返却してください：
-{
-  "summary": "全体概要（50～100文字）",
-  "keep": {
-    "title": "続けるべきこと（10～30文字）",
-    "description": "詳細説明（50～150文字）"
-  },
-  "problem": {
-    "title": "改善すべき問題（10～30文字）",
-    "description": "詳細説明（50～150文字）"
-  },
-  "try": {
-    "title": "次に試すこと（10～30文字）",
-    "description": "詳細説明（50～150文字）"
-  }
-}
+1. タイムライン画面を表示
+2. 空きスロット（1時間単位）を長押し
+3. ボトムシート（Create Log）が開く
+   - 開始時刻: 押したスロットの時刻で初期化
+   - 終了時刻: 1時間後で初期化
+4. Activity（活動名）を入力
+5. Category（カテゴリ）を選択
+6. Start Time（開始時刻）を調整（必要に応じて）
+7. End Time（終了時刻）を調整（必要に応じて）
+8. Memo（メモ）を入力（オプション）
+9. "Create" ボタンをタップ
+10. ボトムシートが閉じる
+11. タイムライングリッドに新しいブロックが表示される
 ```
 
-### 8.3 レスポンス仕様
+### 6.2 既存イベントの編集
 
-#### 8.3.1 成功レスポンス（200 OK）
-
-```json
-{
-  "candidates": [
-    {
-      "content": {
-        "parts": [
-          {
-            "text": "{JSON文字列}"
-          }
-        ],
-        "role": "model"
-      },
-      "finishReason": "STOP"
-    }
-  ]
-}
+```
+1. タイムライン画面を表示
+2. 編集したいイベントブロックをタップ
+3. ボトムシート（Edit Log/Planned）が開く
+   - 既存のデータが入力された状態
+4. 変更したいフィールドを編集
+5. "Save" ボタンをタップ
+6. ボトムシートが閉じる
+7. タイムライングリッドのブロックが更新される
 ```
 
-**JSON文字列の内容**:
-```json
-{
-  "summary": "本日は仕事に8時間集中し、運動と趣味の時間も確保できた充実した1日でした。",
-  "keep": {
-    "title": "朝のルーティン確立",
-    "description": "7時起床で朝食と運動を実施。この習慣が1日のリズムを作っています。"
-  },
-  "problem": {
-    "title": "夜更かしの傾向",
-    "description": "24時過ぎまで趣味に没頭し、睡眠時間が6時間を切りました。"
-  },
-  "try": {
-    "title": "22時以降はリラックスタイム",
-    "description": "趣味の時間を21時までに制限し、就寝前は読書やストレッチに切り替えましょう。"
-  }
-}
+### 6.3 イベントの削除
+
+```
+1. タイムライン画面を表示
+2. 削除したいイベントブロックをタップ
+3. ボトムシート（Edit）が開く
+4. "Delete" ボタンをタップ
+5. ボトムシートが閉じる
+6. タイムライングリッドからブロックが削除される
 ```
 
-#### 8.3.2 エラーレスポンス
+### 6.4 日付の変更
 
-**400 Bad Request**:
-```json
-{
-  "error": {
-    "code": 400,
-    "message": "Invalid API key",
-    "status": "INVALID_ARGUMENT"
-  }
-}
+```
+1. タイムライン画面を表示
+2. 週カレンダーを左右にスワイプ（前週/次週に移動）
+3. 表示したい日付をタップ
+4. タイムライングリッドが選択した日付のデータに更新される
+5. トップバーの月・年表示が更新される
 ```
 
-**429 Too Many Requests**:
-```json
-{
-  "error": {
-    "code": 429,
-    "message": "Quota exceeded",
-    "status": "RESOURCE_EXHAUSTED"
-  }
-}
+### 6.5 AI分析の実行
+
+```
+1. レポート画面に遷移（ボトムナビゲーションから）
+2. "Generate Feedback" ボタンをタップ
+3. Loading状態に遷移（スピナー表示）
+4. AI分析が完了
+5. Success状態に遷移
+6. AIアシスタントカードとKPTカードが表示される
+```
+
+### 6.6 AI分析のリトライ
+
+```
+1. レポート画面でエラーが発生（Error状態）
+2. エラーメッセージを確認
+3. "Retry" ボタンをタップ
+4. Loading状態に遷移
+5. AI分析が完了
+6. Success状態に遷移
 ```
 
 ---
 
-## 9. UI仕様
+## 7. バリデーションルール
 
-### 9.1 タイムライン画面
+### 7.1 イベント作成・編集のバリデーション
 
-#### 9.1.1 レイアウト構造
+| 項目 | ルール | 違反時の動作 |
+|------|--------|------------|
+| Activity | 空白不可（必須入力） | "Create/Save"ボタンが無効化 |
+| Category | 必ず選択（null不可） | "Create/Save"ボタンが無効化 |
+| Start Time | 終了時刻より前である必要 | 終了時刻を自動調整 |
+| End Time | 開始時刻より後である必要 | 自動調整により維持 |
+| Memo | 任意（空白可） | - |
 
-```
-┌─────────────────────────────────────────┐
-│  ◀ 週カレンダー（7日分）▶               │  ← ヘッダー
-│  [時間] [実績]      [計画]              │
-├─────────────────────────────────────────┤
-│ 00:00 │            │                    │
-│       │            │                    │
-│ 01:00 │  [睡眠]    │  [睡眠]            │  ← イベントブロック
-│       │            │                    │
-│ 02:00 │            │                    │
-│  ...  │    ...     │    ...             │
-│ 23:00 │            │                    │
-└─────────────────────────────────────────┘
-│  [Timeline] [Report]                    │  ← ボトムナビゲーション
-└─────────────────────────────────────────┘
-```
+### 7.2 LogEventの特殊ルール
 
-#### 9.1.2 イベントブロック配置計算
+| ルール | 説明 |
+|--------|------|
+| 最小期間 | 1分以上の期間が必要 |
+| 実行中イベント | 終了時刻がnullの場合、タイマー実行中とみなす |
+| 重複タイマー | 同時に実行中のタイマーは1つまで |
 
-**垂直オフセット**:
-```kotlin
-val offset = (hour * 60 + minute) * hourHeight / 60
-```
+### 7.3 時刻調整の自動処理
 
-**ブロック高さ**:
-```kotlin
-val height = max(durationMinutes * hourHeight / 60, 8.dp)
-```
+**開始時刻を変更した場合**:
+- 新しい開始時刻 > 終了時刻の場合
+  - 終了時刻を開始時刻と同じ値に自動更新
 
-**例**: 08:30～10:15 のイベント（105分）
-- オフセット = (8 * 60 + 30) * hourHeight / 60
-- 高さ = 105 * hourHeight / 60
-
-#### 9.1.3 ボトムシート（イベント編集）
-
-**フォーム項目**:
-1. 活動名（TextField）
-2. カテゴリ（Dropdown）
-3. 開始日時（DateTimePicker）
-4. 終了日時（DateTimePicker）
-5. メモ（TextField、複数行）
-6. 繰り返し設定（オプション）
-
-**ボタン**:
-- 保存（PrimaryButton）
-- キャンセル（TextButton）
-- 削除（DestructiveButton）※編集時のみ
+**終了時刻を変更した場合**:
+- 新しい終了時刻 < 開始時刻の場合
+  - ダイアログが閉じず、ユーザーに再選択を促す
+  - または、自動調整により開始時刻と同じ値に設定
 
 ---
 
-### 9.2 レポート画面
+## 8. エラーハンドリング
 
-#### 9.2.1 レイアウト構造
+### 8.1 レポート画面のエラー
 
-```
-┌─────────────────────────────────────────┐
-│  📅 2026-02-08                          │  ← 日付表示
-│  [AI分析を実行]                         │  ← アクションボタン
-├─────────────────────────────────────────┤
-│  ┌───────────────────────────────────┐  │
-│  │ 🤖 AI アシスタント               │  │
-│  │ {Summary}                         │  │  ← AIアシスタントカード
-│  └───────────────────────────────────┘  │
-│                                         │
-│  ┌───────────────────────────────────┐  │
-│  │ ✓ {Keep Title}                   │  │
-│  │ {Keep Description}                │  │  ← Keep カード（緑）
-│  └───────────────────────────────────┘  │
-│                                         │
-│  ┌───────────────────────────────────┐  │
-│  │ ⚠ {Problem Title}                │  │
-│  │ {Problem Description}             │  │  ← Problem カード（橙）
-│  └───────────────────────────────────┘  │
-│                                         │
-│  ┌───────────────────────────────────┐  │
-│  │ ✨ {Try Title}                    │  │
-│  │ {Try Description}                 │  │  ← Try カード（青）
-│  └───────────────────────────────────┘  │
-└─────────────────────────────────────────┘
-```
+| エラー種別 | 表示メッセージ | 対応方法 |
+|-----------|--------------|---------|
+| API接続エラー | "An error occurred\n[ネットワークエラーメッセージ]" | Retryボタンで再実行 |
+| 認証エラー | "An error occurred\n[認証エラーメッセージ]" | Retryボタンで再実行 |
+| その他のエラー | "An error occurred\n[エラーメッセージ]" | Retryボタンで再実行 |
 
-#### 9.2.2 カードデザイン
+### 8.2 タイムライン画面のエラー
 
-**共通スタイル**:
-- Material 3 Card
-- 角丸: 12dp
-- 影: elevation 2dp
-- パディング: 16dp
+| エラー種別 | 表示 | 対応方法 |
+|-----------|------|---------|
+| データ読み込みエラー | "エラー: [メッセージ]" | 画面を再読み込み |
 
-**KPT カラー**:
-- Keep: `Color(0xFF4CAF50)` (Green)
-- Problem: `Color(0xFFFF9800)` (Orange)
-- Try: `Color(0xFF2196F3)` (Blue)
+### 8.3 エラー表示の仕様
+
+**レポート画面**:
+- Error状態に遷移
+- エラーメッセージを中央に表示
+- "Retry"ボタンを表示
+- タップで再実行
+
+**タイムライン画面**:
+- エラーテキストを画面中央に表示
+- 赤色で表示
 
 ---
 
-## 10. データフロー
+## 9. 画面の初期状態
 
-### 10.1 タイムライン画面のリアクティブフロー
+### 9.1 タイムライン画面の初期表示
 
-```kotlin
-// ViewModel
-val uiState: StateFlow<TimelineUiState> = combine(
-    selectedDateFlow,                           // 選択日の Flow
-    categoryRepository.getCategoriesStream(),   // カテゴリ一覧の Flow
-    logEventRepository.getLogEventsByDateStream(selectedDate),     // ログの Flow
-    plannedEventRepository.getPlannedEventsByDateStream(selectedDate) // 計画の Flow
-) { selectedDate, categories, logEvents, plannedEvents ->
-    TimelineUiState(
-        selectedDate = selectedDate,
-        categories = categories,
-        logEvents = logEvents,
-        plannedEvents = plannedEvents
-    )
-}.stateIn(
-    scope = viewModelScope,
-    started = SharingStarted.WhileSubscribed(5000),
-    initialValue = TimelineUiState()
-)
-```
+**初回起動時**:
+- デフォルトカテゴリ7個を自動作成
+- 現在の日付を選択
+- 空のタイムライングリッドを表示
 
-**フロー図**:
-```
-Room DB (category)
-  ↓ Flow<List<CategoryEntity>>
-CategoryRepository.getCategoriesStream()
-  ↓ map { entities.map(::toModel) }
-  ↓ Flow<List<Category>>
-ViewModel.combine()
-  ↓ stateIn
-  ↓ StateFlow<TimelineUiState>
-Screen.collectAsState()
-  ↓ State<TimelineUiState>
-UI再描画
-```
+**2回目以降の起動時**:
+- 現在の日付を選択
+- 現在の日付のイベントを表示
+
+### 9.2 レポート画面の初期表示
+
+**初回表示時**:
+- Initial状態を表示
+- 対象日: 現在の日付
+- "Generate Feedback"ボタンを表示
+
+**フィードバック生成後**:
+- Success状態を表示
+- キャッシュされたフィードバックを表示（同じ日付の場合）
 
 ---
 
-### 10.2 イベント処理フロー（ユーザーアクション → DB更新）
+## 10. UI仕様の詳細
 
-```
-UI: ボタンクリック
-  ↓
-ViewModel.onEvent(event)
-  ↓
-viewModelScope.launch {
-    repository.upsertPlannedEvent(event)
-}
-  ↓
-Repository.upsertPlannedEvent()
-  ↓ withContext(Dispatchers.IO)
-  ↓ toEntity(domainModel)
-DAO.upsert(entity)
-  ↓
-Room DB 更新
-  ↓ Flow 自動発火
-Repository.getPlannedEventsByDateStream()
-  ↓ map { entities.map(::toModel) }
-ViewModel (combine が再計算)
-  ↓ stateIn
-UI 自動再描画
-```
+### 10.1 色の使用
 
----
+**プライマリ色**:
+- 選択中の日付背景
+- アクティブなボタン
+- アクセントカラー
 
-### 10.3 AI分析フロー
+**カテゴリ色**:
+- イベントブロックの背景（透明度30%）
+- イベントブロックの左フチ（濃い色）
+- ラベルテキスト（50%暗く）
 
-```
-UI: [AI分析] ボタンタップ
-  ↓
-ReportViewModel.generateFeedback()
-  ↓
-viewModelScope.launch {
-    _uiState.update { it.copy(isLoading = true) }
+**KPTカード色**:
+- Keep: 緑系統
+- Problem: オレンジ系統
+- Try: 青系統
 
-    // 1. プロンプト生成
-    val prompt = buildPrompt(logEvents, targetDate)
+### 10.2 フォントサイズ
 
-    // 2. Repository 呼び出し
-    val feedback = aiFeedbackRepository.generateFeedback(targetDate, prompt)
+| 要素 | サイズ | 太さ |
+|------|--------|------|
+| 画面タイトル | 大 | 太字 |
+| セクションタイトル | 中 | 太字 |
+| 本文 | 中 | 通常 |
+| 補足テキスト | 小 | 通常 |
+| 時刻ラベル | 小 | 通常 |
 
-    // 3. UI更新
-    _uiState.update { it.copy(aiFeedback = feedback, isLoading = false) }
-}
-  ↓
-AiFeedbackRepository.generateFeedback()
-  ↓
-// キャッシュ確認
-val cached = aiFeedbackDao.getByDate(targetDate)
-if (cached != null) return cached.toModel()
-  ↓
-// API 呼び出し
-val response = geminiApiClient.generateContent(prompt)
-  ↓
-// JSON パース
-val json = Json.decodeFromString<AiFeedbackDto>(response.text)
-  ↓
-// ドメインモデル変換
-val feedback = json.toModel(targetDate)
-  ↓
-// DB 保存
-aiFeedbackDao.insert(feedback.toEntity())
-  ↓
-return feedback
-  ↓
-UI: AiFeedbackContent に表示
-```
+### 10.3 スペーシング
+
+| 要素 | 余白 |
+|------|------|
+| 画面の端 | 16dp |
+| セクション間 | 16dp |
+| カード間 | 16dp |
+| フィールド間 | 12dp |
+| テキスト行間 | 4dp |
+
+### 10.4 アニメーション
+
+| 要素 | アニメーション | 効果 |
+|------|-------------|------|
+| 日付選択 | 背景色の変化 | スムーズな遷移 |
+| 日付選択 | スケール変化 | 0.95 → 1.0 |
+| スロット長押し | 背景色の変化 | 薄いプライマリ色 |
+| ボトムシート | スライドアップ | 下から上にスライド |
 
 ---
 
-## 11. 初期化処理
+## 11. 制約事項
 
-### 11.1 初回起動フロー
+### 11.1 現在の制約
 
-```
-App 起動
-  ↓
-TimelineScreen.LaunchedEffect(Unit) {
-    viewModel.initialize()
-}
-  ↓
-TimelineViewModel.initialize()
-  ↓
-viewModelScope.launch {
-    val isFirstLaunch = preferencesRepository.isFirstLaunch()
+1. **外部カレンダー連携**: 未実装
+   - Apple Calendar連携なし
+   - Google Calendar連携なし
 
-    if (isFirstLaunch) {
-        // デフォルトカテゴリ作成
-        val defaultCategories = listOf(
-            Category(name = "仕事", colorArgb = 0xFF2196F3.toInt(), ...),
-            Category(name = "勉強", colorArgb = 0xFF4CAF50.toInt(), ...),
-            // ... 7カテゴリ
-        )
+2. **繰り返しイベント**: 部分的実装
+   - 月次繰り返しの「月末」指定未対応
 
-        categoryRepository.initializeDefaultCategories(defaultCategories)
+3. **データ同期**: 未実装
+   - クラウド同期機能なし
+   - マルチデバイス間のデータ共有不可
 
-        // 初期化完了フラグ
-        preferencesRepository.markInitialized()
-    }
-}
-```
+4. **通知機能**: 未実装
+   - 予定イベントのリマインダーなし
 
-### 11.2 デフォルトカテゴリ一覧
+5. **データエクスポート**: 未実装
+   - CSV出力なし
+   - PDF出力なし
 
-| ID | 名前 | 色 | sortOrder |
-|----|------|---|-----------|
-| UUID1 | 仕事 | 0xFF2196F3 | 0 |
-| UUID2 | 勉強 | 0xFF4CAF50 | 1 |
-| UUID3 | 運動 | 0xFFFF9800 | 2 |
-| UUID4 | 趣味 | 0xFF9C27B0 | 3 |
-| UUID5 | 睡眠 | 0xFF607D8B | 4 |
-| UUID6 | 食事 | 0xFFFF5722 | 5 |
-| UUID7 | その他 | 0xFF9E9E9E | 6 |
+6. **AI分析モード**: 未実装
+   - フィードバックトーンの切り替え（優しい/普通/厳しい）なし
+
+7. **タイムゾーン**: 固定
+   - ユーザーのローカルタイムゾーンのみ対応
+
+### 11.2 既知の問題
+
+1. **AI応答エラー**: JSONパースに失敗した場合のフォールバック処理なし
+2. **長時間イベント**: 24時間を超えるイベントの表示未対応
+3. **同時イベント**: 同じ時間帯の複数イベントは重なって表示される
 
 ---
 
-## 12. セットアップ手順
+## 12. 将来の拡張計画
 
-### 12.1 環境要件
+### 12.1 機能拡張
 
-- **JDK**: 17 以上
-- **Android Studio**: Ladybug 以上
-- **Xcode**: 15.0 以上（iOS ビルド時）
-- **Kotlin**: 2.3.0+
+- **週次/月次レポート**: 複数日のデータを集計して統計表示
+- **カスタムKPI**: ユーザー定義の指標追跡
+- **外部カレンダー連携**: Apple Calendar / Google Calendar との同期
+- **データエクスポート**: CSV / PDF 形式でのデータ出力
+- **通知・リマインダー**: 予定イベントの事前通知
+- **ダークモード**: 暗い配色テーマの追加
+- **カテゴリのカスタマイズ**: ユーザーが自由にカテゴリを作成・編集
 
-### 12.2 初期設定
+### 12.2 UI/UX改善
 
-#### 12.2.1 APIキー設定
-
-1. Gemini API キーを取得（https://ai.google.dev/）
-2. プロジェクトルートに `local.properties` を作成
-3. 以下を追加:
-   ```properties
-   GEMINI_API_KEY=your_api_key_here
-   ```
-
-#### 12.2.2 依存関係インストール
-
-```bash
-./gradlew build
-```
-
-### 12.3 実行コマンド
-
-#### Android
-```bash
-# デバッグビルドインストール
-./gradlew :composeApp:installDebug
-
-# エミュレータ起動（adb経由）
-adb shell am start -n com.example.timeinventory/.MainActivity
-```
-
-#### iOS
-```bash
-# Simulator（ARM64）実行
-./gradlew :composeApp:iosSimulatorArm64Run
-
-# 実機デバイス（要: 署名設定）
-./gradlew :composeApp:iosArm64Run
-```
-
-### 12.4 テスト実行
-
-```bash
-# 全テスト実行
-./gradlew test
-
-# 特定モジュールのテスト
-./gradlew :core:data:test
-```
+- **複数イベントの重なり表示**: 同時間帯のイベントを横並びで表示
+- **ドラッグ&ドロップ**: イベントブロックをドラッグして時刻変更
+- **長時間イベント**: 日をまたぐイベントの適切な表示
+- **検索機能**: 過去のイベントを検索
+- **フィルター機能**: カテゴリ別の表示/非表示
 
 ---
 
-## 13. 制約・制限事項
-
-### 13.1 現在の制約
-
-1. **外部カレンダー連携**: 未実装（Apple Calendar / Google Calendar）
-2. **データ同期**: クラウド同期機能なし（ローカルのみ）
-3. **マルチデバイス**: デバイス間のデータ共有不可
-4. **AI分析モード**: GENTLE/NORMAL/STRICT のトーン切り替え未実装
-5. **通知機能**: 計画イベントのリマインダー機能なし
-6. **エクスポート**: データのCSV/PDF出力機能なし
-
-### 13.2 既知の問題
-
-1. **繰り返しイベント**: 月次繰り返しの「月末」指定が未対応
-2. **タイムゾーン**: UTC固定（ユーザーのローカルタイムゾーン未対応）
-3. **AI応答パース失敗**: JSON形式が不正な場合のフォールバック処理なし
-
----
-
-## 14. 将来の拡張予定
-
-### 14.1 機能拡張
-
-- [ ] 週次/月次レポート（集計統計）
-- [ ] カスタムKPIトラッキング
-- [ ] 外部カレンダー連携（Apple / Google）
-- [ ] データエクスポート（CSV / PDF）
-- [ ] 通知・リマインダー機能
-- [ ] ダークモード対応
-
-### 14.2 技術改善
-
-- [ ] データベース暗号化（SQLCipher）
-- [ ] クラウド同期（Firebase / Supabase）
-- [ ] オフライン時のAI分析キュー
-- [ ] パフォーマンスモニタリング（Crashlytics）
-
----
-
-## 付録A: 用語集
+## 13. 用語集
 
 | 用語 | 説明 |
 |------|------|
-| **KPT** | Keep-Problem-Try の略。振り返りフレームワーク |
-| **UDF** | 単方向データフロー（Unidirectional Data Flow） |
-| **SSOT** | 信頼できる唯一の情報源（Single Source of Truth） |
-| **DAO** | Data Access Object（データアクセス層） |
-| **DTO** | Data Transfer Object（データ転送オブジェクト） |
-| **UUID** | 汎用一意識別子（Universally Unique Identifier） |
-| **RFC 5545** | iCalendar 仕様（繰り返しルールの標準） |
+| **LogEvent** | 実際に行った活動の記録（実績） |
+| **PlannedEvent** | 予定している活動の記録（計画） |
+| **TimeBlock** | タイムライングリッド上のイベント表示ブロック |
+| **KPT** | Keep-Problem-Try の振り返りフレームワーク |
+| **Category** | イベントを分類するためのラベルと色 |
+| **ボトムシート** | 画面下部から表示される入力フォーム |
+| **週カレンダー** | 7日間の日付を横並びで表示するカレンダー |
 
 ---
 
-## 付録B: 参考資料
-
-- [Android Architecture Guide](https://developer.android.com/topic/architecture)
-- [Kotlin Multiplatform Documentation](https://kotlinlang.org/docs/multiplatform.html)
-- [Compose Multiplatform](https://www.jetbrains.com/lp/compose-multiplatform/)
-- [Gemini API Documentation](https://ai.google.dev/docs)
-- [Material Design 3](https://m3.material.io/)
-
----
-
-**ドキュメントバージョン**: 1.0.0
-**最終更新日**: 2026-02-08
-**作成者**: Claude (AI Assistant)
+**補足**: この仕様書は実装の詳細に依存しない、機能要件とUI/UX仕様に焦点を当てた文書です。技術的な実装方法については別途技術設計書を参照してください。
